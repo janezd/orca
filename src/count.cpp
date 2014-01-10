@@ -792,3 +792,177 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
     }
     
 }
+
+
+
+/** count edge orbits of graphlets on max 4 nodes */
+extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
+    GraphData data(p_edges, dim_edges);
+    
+    int const &n = data.n_nodes;
+    int const &m = data.n_edges;
+    PAIR const *const edges = data.edges;
+    int const *const deg = data.deg;
+    int const *const *const adj = data.adj;
+    PII const *const *const inc = data.inc;
+
+	// precompute triangles that span over edges
+	int *tri = (int*)S_alloc(m, sizeof(int));
+	for (int i = 0; i < m; i++) {
+		int const &x = edges[i].a, &y = edges[i].b;
+		for (int xi = 0,yi = 0; xi < deg[x] && yi < deg[y]; ) {
+			if (adj[x][xi] == adj[y][yi]) {
+                tri[i]++;
+                xi++;
+                yi++;
+            }
+			else if (adj[x][xi] < adj[y][yi]) {
+                xi++;
+            }
+			else {
+                yi++;
+            }
+		}
+	}
+    
+	// count full graphlets
+	int64 *C4 = (int64 *)S_alloc(m, sizeof(int64));
+	int *neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
+	memset(neighx, -1, n * sizeof(int));
+	int *neigh = (int *)R_alloc(n, sizeof(int)), nn; // lookup table - common neighbors of x and y
+	PII *neigh_edges = (PII *)R_alloc(n, sizeof(PII)); // list of common neighbors of x and y
+	for (int x = 0; x < n; x++) {
+		for (int nx = 0; nx < deg[x]; nx++) {
+			int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
+			neighx[y] = xy;
+		}
+		for (int nx = 0; nx < deg[x]; nx++) {
+			int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
+			if (y >= x)
+                break;
+			nn = 0;
+			for (int ny = 0; ny < deg[y]; ny++) {
+				int const &z = inc[y][ny].first, &yz = inc[y][ny].second;
+				if (z >= y)
+                    break;
+				if (neighx[z] == -1)
+                    continue;
+				int const &xz = neighx[z];
+				neigh[nn] = z;
+				neigh_edges[nn] = PII(xz, yz);
+				nn++;
+			}
+			for (int i = 0; i < nn; i++) {
+				int z = neigh[i], xz = neigh_edges[i].first, yz = neigh_edges[i].second;
+				for (int j = i + 1; j < nn; j++) {
+					int const &w = neigh[j], &xw = neigh_edges[j].first, &yw = neigh_edges[j].second;
+					if (data.adjacent(z, w)) {
+						C4[xy]++;
+						C4[xz]++;
+                        C4[yz]++;
+						C4[xw]++;
+                        C4[yw]++;
+						// another iteration to count this last(smallest) edge instead of calling getEdgeId
+						//int zw=getEdgeId(z,w); C4[zw]++;
+					}
+				}
+			}
+		}
+		for (int nx = 0; nx < deg[x]; nx++) {
+			int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
+			neighx[y] = -1;
+		}
+	}
+    
+	// count full graphlets for the smallest edge
+	for (int x = 0; x < n; x++) {
+		for (int nx = deg[x] - 1; nx >= 0; nx--) {
+			int const &y = inc[x][nx].first, xy = inc[x][nx].second;
+			if (y <= x)
+                break;
+			nn = 0;
+			for (int ny = deg[y] - 1; ny >= 0; ny--) {
+				int z = adj[y][ny];
+				if (z <= y)
+                    break;
+				if (!data.adjacent(x, z)) continue;
+				neigh[nn++] = z;
+			}
+			for (int i = 0; i < nn; i++) {
+				int z = neigh[i];
+				for (int j = i + 1; j < nn; j++) {
+					int zz = neigh[j];
+					if (data.adjacent(z, zz)) {
+						C4[xy]++;
+					}
+				}
+			}
+		}
+	}
+    
+	// set up a system of equations relating orbits for every node
+	int *common = (int *)S_alloc(n, sizeof(int));
+	int *common_list = (int *)R_alloc(n, sizeof(int)), nc = 0;
+	for (int x = 0; x < n; x++) {
+		// common nodes of x and some other node
+		for (int i = 0; i < nc; i++)
+            common[common_list[i]] = 0;
+		nc = 0;
+		for (int nx = 0; nx<deg[x];nx++) {
+			int const &y = adj[x][nx];
+			for (int ny = 0; ny < deg[y]; ny++) {
+				int z = adj[y][ny];
+				if (z == x)
+                    continue;
+				if (common[z] == 0)
+                    common_list[nc++]=z;
+				common[z]++;
+			}
+		}
+        
+		for (int nx = 0; nx < deg[x]; nx++) {
+			int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
+			int const &e = xy;
+			for (int n1 = 0; n1 < deg[x]; n1++) {
+				int z = inc[x][n1].first, xz = inc[x][n1].second;
+				if (z == y)
+                    continue;
+				if (data.adjacent(y, z)) { // triangle
+					if (x < y) {
+						ORBIT(e, 1)++;
+						ORBIT(e, 10) += tri[xy] - 1;
+						ORBIT(e, 7) += deg[z] - 2;
+					}
+					ORBIT(e, 9) += tri[xz] - 1;
+					ORBIT(e, 8) += deg[x] - 2;
+				}
+			}
+			for (int n1 = 0; n1 < deg[y]; n1++) {
+				int const &z = inc[y][n1].first, yz = inc[y][n1].second;
+				if (z == x)
+                    continue;
+				if (!data.adjacent(x, z)) { // path x-y-z
+					ORBIT(e, 0)++;
+					ORBIT(e, 6) += tri[yz];
+					ORBIT(e, 5) += common[z]  - 1;
+					ORBIT(e, 4) += deg[y] - 2;
+					ORBIT(e, 3) += deg[x] - 1;
+					ORBIT(e, 2) += deg[z] - 1;
+				}
+			}
+		}
+	}
+	// solve system of equations
+	for (int e = 0; e < m; e++) {
+		ORBIT(e, 11) = C4[e];
+		ORBIT(e, 10) = (ORBIT(e, 10)- 2 * ORBIT(e, 11)) / 2;
+		ORBIT(e, 9) = (ORBIT(e, 9) - 4 * ORBIT(e, 11));
+		ORBIT(e, 8) = (ORBIT(e, 8) - ORBIT(e, 9) - 4 * ORBIT(e, 10) - 4 * ORBIT(e, 11));
+		ORBIT(e, 7) = (ORBIT(e, 7) - ORBIT(e, 9) - 2 * ORBIT(e, 11));
+		ORBIT(e, 6) = (ORBIT(e, 6) - ORBIT(e, 9)) / 2;
+		ORBIT(e, 5) = (ORBIT(e, 5) - ORBIT(e, 9)) / 2;
+		ORBIT(e, 4) = (ORBIT(e, 4) - 2 * ORBIT(e, 6) - ORBIT(e, 8) - ORBIT(e, 9)) / 2;
+		ORBIT(e, 3) = (ORBIT(e, 3) - 2 * ORBIT(e, 5) - ORBIT(e, 8) - ORBIT(e, 9)) / 2;
+		ORBIT(e, 2) = (ORBIT(e, 2) - 2 * ORBIT(e, 5) - 2 * ORBIT(e, 6) - ORBIT(e, 9));
+	}
+}
