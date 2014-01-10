@@ -357,7 +357,6 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
 extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
 {
     try {
-        int frac, frac_prev;
         int nn, nn2;
         GraphData data(p_edges, dim_edges);
 
@@ -377,12 +376,7 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
         #define common3_get(x) (((common3_it = common3.find(x)) != common3.end()) ? (common3_it->second) : 0)
         #define common2_get(x) (((common2_it = common2.find(x)) != common2.end()) ? (common2_it->second) : 0)
         
-        frac_prev = -1;
         for (int x = 0; x < n; x++) {
-            frac = 100LL * x / n;
-            if (frac != frac_prev) {
-                frac_prev=frac;
-            }
             for (int n1 = 0; n1 < deg[x]; n1++) {
                 int a = adj[x][n1];
                 for (int n2 = n1 + 1; n2 < deg[x]; n2++) {
@@ -422,12 +416,7 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
         int64 *C5 = (int64 *)S_alloc(n, sizeof(int64));
         int *neigh = (int *)R_alloc(n, sizeof(int));
         int *neigh2 = (int *)R_alloc(n, sizeof(int));
-        frac_prev = -1;
         for (int x = 0; x < n; x++) {
-            frac = 100LL * x / n;
-            if (frac != frac_prev) {
-                frac_prev = frac;
-            }
             for (int nx = 0; nx < deg[x]; nx++) {
                 int y = adj[x][nx];
                 if (y >= x)
@@ -473,13 +462,7 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
         int *common_a_list = (int *)R_alloc(n, sizeof(int)), nca = 0;
         
         // set up a system of equations relating orbit counts
-        frac_prev = -1;
         for (int x = 0; x < n; x++) {
-            frac = 100LL * x / n;
-            if (frac != frac_prev) {
-                frac_prev = frac;
-            }
-            
             for (int i = 0; i < ncx; i++) {
                 common_x[common_x_list[i]] = 0;
             }
