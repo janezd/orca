@@ -16,5 +16,5 @@ ecount4 <- function(edges) {
     edges <- t(data.matrix(edges))
     .C("ecount4",
        edges, dim(edges),
-       orbits=matrix(0L, nrow=max(edges), ncol=12))$orbits
+       orbits=matrix(0L, nrow=ncol(edges), ncol=12))$orbits
 }

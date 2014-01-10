@@ -96,7 +96,9 @@ struct hash_TRIPLE {
 	}
 };
 
+
 #define ORBIT(node,orb) (orbits[(node) + (orb) * n])
+#define EORBIT(node,orb) (orbits[(node) + (orb) * m])
 
 #define adj_chunk (8 * sizeof(int))
 
@@ -807,10 +809,10 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
     PII const *const *const inc = data.inc;
 
 	// precompute triangles that span over edges
-	int *tri = (int*)S_alloc(m, sizeof(int));
+	int *tri = (int *)S_alloc(m, sizeof(int));
 	for (int i = 0; i < m; i++) {
 		int const &x = edges[i].a, &y = edges[i].b;
-		for (int xi = 0,yi = 0; xi < deg[x] && yi < deg[y]; ) {
+		for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
 			if (adj[x][xi] == adj[y][yi]) {
                 tri[i]++;
                 xi++;
@@ -824,7 +826,7 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
             }
 		}
 	}
-    
+
 	// count full graphlets
 	int64 *C4 = (int64 *)S_alloc(m, sizeof(int64));
 	int *neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
@@ -929,12 +931,13 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
                     continue;
 				if (data.adjacent(y, z)) { // triangle
 					if (x < y) {
-						ORBIT(e, 1)++;
-						ORBIT(e, 10) += tri[xy] - 1;
-						ORBIT(e, 7) += deg[z] - 2;
+						EORBIT(e, 1)++;
+						EORBIT(e, 10) += tri[xy] - 1;
+						EORBIT(e, 7) += deg[z] - 2;
+                        printf("%i %i %i %i %i\n", x, y, z, e, EORBIT(e, 1));
 					}
-					ORBIT(e, 9) += tri[xz] - 1;
-					ORBIT(e, 8) += deg[x] - 2;
+					EORBIT(e, 9) += tri[xz] - 1;
+					EORBIT(e, 8) += deg[x] - 2;
 				}
 			}
 			for (int n1 = 0; n1 < deg[y]; n1++) {
@@ -942,27 +945,27 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
 				if (z == x)
                     continue;
 				if (!data.adjacent(x, z)) { // path x-y-z
-					ORBIT(e, 0)++;
-					ORBIT(e, 6) += tri[yz];
-					ORBIT(e, 5) += common[z]  - 1;
-					ORBIT(e, 4) += deg[y] - 2;
-					ORBIT(e, 3) += deg[x] - 1;
-					ORBIT(e, 2) += deg[z] - 1;
+					EORBIT(e, 0)++;
+					EORBIT(e, 6) += tri[yz];
+					EORBIT(e, 5) += common[z]  - 1;
+					EORBIT(e, 4) += deg[y] - 2;
+					EORBIT(e, 3) += deg[x] - 1;
+					EORBIT(e, 2) += deg[z] - 1;
 				}
 			}
 		}
 	}
 	// solve system of equations
 	for (int e = 0; e < m; e++) {
-		ORBIT(e, 11) = C4[e];
-		ORBIT(e, 10) = (ORBIT(e, 10)- 2 * ORBIT(e, 11)) / 2;
-		ORBIT(e, 9) = (ORBIT(e, 9) - 4 * ORBIT(e, 11));
-		ORBIT(e, 8) = (ORBIT(e, 8) - ORBIT(e, 9) - 4 * ORBIT(e, 10) - 4 * ORBIT(e, 11));
-		ORBIT(e, 7) = (ORBIT(e, 7) - ORBIT(e, 9) - 2 * ORBIT(e, 11));
-		ORBIT(e, 6) = (ORBIT(e, 6) - ORBIT(e, 9)) / 2;
-		ORBIT(e, 5) = (ORBIT(e, 5) - ORBIT(e, 9)) / 2;
-		ORBIT(e, 4) = (ORBIT(e, 4) - 2 * ORBIT(e, 6) - ORBIT(e, 8) - ORBIT(e, 9)) / 2;
-		ORBIT(e, 3) = (ORBIT(e, 3) - 2 * ORBIT(e, 5) - ORBIT(e, 8) - ORBIT(e, 9)) / 2;
-		ORBIT(e, 2) = (ORBIT(e, 2) - 2 * ORBIT(e, 5) - 2 * ORBIT(e, 6) - ORBIT(e, 9));
+		EORBIT(e, 11) = C4[e];
+		EORBIT(e, 10) = (EORBIT(e, 10)- 2 * EORBIT(e, 11)) / 2;
+		EORBIT(e, 9) = (EORBIT(e, 9) - 4 * EORBIT(e, 11));
+		EORBIT(e, 8) = (EORBIT(e, 8) - EORBIT(e, 9) - 4 * EORBIT(e, 10) - 4 * EORBIT(e, 11));
+		EORBIT(e, 7) = (EORBIT(e, 7) - EORBIT(e, 9) - 2 * EORBIT(e, 11));
+		EORBIT(e, 6) = (EORBIT(e, 6) - EORBIT(e, 9)) / 2;
+		EORBIT(e, 5) = (EORBIT(e, 5) - EORBIT(e, 9)) / 2;
+		EORBIT(e, 4) = (EORBIT(e, 4) - 2 * EORBIT(e, 6) - EORBIT(e, 8) - EORBIT(e, 9)) / 2;
+		EORBIT(e, 3) = (EORBIT(e, 3) - 2 * EORBIT(e, 5) - EORBIT(e, 8) - EORBIT(e, 9)) / 2;
+		EORBIT(e, 2) = (EORBIT(e, 2) - 2 * EORBIT(e, 5) - 2 * EORBIT(e, 6) - EORBIT(e, 9));
 	}
 }
