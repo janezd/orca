@@ -28,9 +28,6 @@
 using namespace std;
 
 
-// TODO: move precomputation of triangles to GraphData::GraphData or to a separate function
-// TODO: ... similar for other common code fragments
-
 typedef long long int64;
 typedef pair<int,int> PII;
 
@@ -109,7 +106,8 @@ struct GraphData {
     int *adj_matrix; // compressed adjacency matrix; initialized iff smaller than 100 MB
     
     GraphData(PAIR * const edges, int const * const dim_edges);
-    
+    int const *triangles() const;
+
     
     inline bool adjacent_list(int const x, int const y) const
     {
@@ -202,7 +200,27 @@ GraphData::GraphData(PAIR * const p_edges, int const * const dim_edges)
 }
 
 
-
+int const *GraphData::triangles() const {
+    // precompute triangles that span over edges
+    int * const tri = (int *)S_alloc(n_edges, sizeof(int));
+    for (int i = 0; i < n_edges; i++) {
+        int const &x = edges[i].a, &y = edges[i].b;
+        for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
+            if (adj[x][xi] == adj[y][yi]) {
+                tri[i]++;
+                xi++;
+                yi++;
+            }
+            else if (adj[x][xi] < adj[y][yi]) {
+                xi++;
+            }
+            else {
+                yi++;
+            }
+        }
+    }
+    return tri;
+}
 
 /** count graphlets on 4 nodes */
 
@@ -211,6 +229,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
     try {
         int nn;
         GraphData data(p_edges, dim_edges);
+        int const * const tri = data.triangles();
         
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
@@ -219,23 +238,6 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
         
-        // precompute triangles that span over edges
-        int * const tri = (int *)S_alloc(m, sizeof(int));
-        for (int i = 0; i < m; i++) {
-            int const &x = edges[i].a, &y = edges[i].b;
-            for (int xi = 0,yi = 0; xi < deg[x] && yi < deg[y]; ) {
-                if (adj[x][xi] == adj[y][yi]) {
-                    tri[i]++;
-                    xi++;
-                    yi++; }
-                else if (adj[x][xi] < adj[y][yi]) {
-                    xi++;
-                }
-                else {
-                    yi++;
-                }
-            }
-        }
         
         int64 * const C4 = (int64 *)S_alloc(data.n_nodes, sizeof(int64));
         int * const neigh = (int *)S_alloc(n, sizeof(int));
@@ -357,6 +359,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
     try {
         int nn, nn2;
         GraphData data(p_edges, dim_edges);
+        int const * const tri = data.triangles();
 
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
@@ -387,25 +390,6 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                             continue;
                         common3[TRIPLE(a, b, c)]++;
                     }
-                }
-            }
-        }
-        
-        // precompute triangles that span over edges
-        int * const tri = (int *)S_alloc(m, sizeof(int));
-        for (int i = 0; i < m; i++) {
-            int const &x = edges[i].a, &y = edges[i].b;
-            for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
-                if (adj[x][xi] == adj[y][yi]) {
-                    tri[i]++;
-                    xi++;
-                    yi++;
-                }
-                else if (adj[x][xi]<adj[y][yi]) {
-                    xi++;
-                }
-                else {
-                    yi++;
                 }
             }
         }
@@ -796,6 +780,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
 extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
     try {
         GraphData data(p_edges, dim_edges);
+        int const * const tri = data.triangles();
         
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
@@ -803,25 +788,6 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
-        
-        // precompute triangles that span over edges
-        int *const tri = (int *)S_alloc(m, sizeof(int));
-        for (int i = 0; i < m; i++) {
-            int const &x = edges[i].a, &y = edges[i].b;
-            for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
-                if (adj[x][xi] == adj[y][yi]) {
-                    tri[i]++;
-                    xi++;
-                    yi++;
-                }
-                else if (adj[x][xi] < adj[y][yi]) {
-                    xi++;
-                }
-                else {
-                    yi++;
-                }
-            }
-        }
         
         // count full graphlets
         int64 * const C4 = (int64 *)S_alloc(m, sizeof(int64));
@@ -970,3 +936,537 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
     }
 
 }
+
+
+/** count edge orbits of graphlets on max 5 nodes */
+/*
+extern "C" void ecount5(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
+    try {
+        GraphData data(p_edges, dim_edges);
+        int const * const tri = data.triangles();
+ 
+        int const &n = data.n_nodes;
+        int const &m = data.n_edges;
+        PAIR const *const edges = data.edges;
+        int const *const deg = data.deg;
+        int const *const *const adj = data.adj;
+        PII const *const *const inc = data.inc;
+        
+        for (int x = 0; x < n; x++) {
+            for (int n1 = 0; n1 < deg[x]; n1++) {
+                int a = adj[x][n1];
+                for (int n2 = n1 + 1; n2 < deg[x]; n2++) {
+                    int const &b = adj[x][n2];
+                    common2[PAIR(a, b)]++;
+                    for (int n3 = n2 + 1; n3 < deg[x]; n3++) {
+                        int c = adj[x][n3];
+                        int st = adjacent(a, b) + adjacent(a, c) + adjacent(b, c);
+                        if (st < 2)
+                            continue;
+                        common3[TRIPLE(a,b,c)]++;
+                    }
+                }
+            }
+        }
+        // precompute triangles that span over edges
+        int * const tri = (int *)S_alloc(m, sizeof(int));
+        for (int i = 0; i < m; i++) {
+            int const &x = edges[i].a, &y = edges[i].b;
+            for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
+                if (adj[x][xi] == adj[y][yi]) {
+                    tri[i]++;
+                    xi++;
+                    yi++;
+                }
+                else if (adj[x][xi] < adj[y][yi]) {
+                    xi++;
+                }
+                else {
+                    yi++;
+                }
+            }
+        }
+        
+        // count full graphlets
+        int64 *const C5 = (int64 *)S_alloc(m,sizeof(int64));
+        int *neighx = (int*)malloc(n*sizeof(int)); // lookup table - edges to neighbors of x
+        memset(neighx,-1,n*sizeof(int));
+        int *neigh = (int*)malloc(n*sizeof(int)), nn; // lookup table - common neighbors of x and y
+        PII *neigh_edges = (PII*)malloc(n*sizeof(PII)); // list of common neighbors of x and y
+        int *neigh2 = (int*)malloc(n*sizeof(int)), nn2;
+        TIII *neigh2_edges = (TIII*)malloc(n*sizeof(TIII));
+        frac_prev=-1;
+        for (int x=0;x<n;x++) {
+            frac = 100LL*x/n;
+            if (frac!=frac_prev) {
+                printf("%d%%\r",frac);
+                frac_prev=frac;
+            }
+            
+            for (int nx=0;nx<deg[x];nx++) {
+                int y=inc[x][nx].first, xy=inc[x][nx].second;
+                neighx[y]=xy;
+            }
+            for (int nx=0;nx<deg[x];nx++) {
+                int y=inc[x][nx].first, xy=inc[x][nx].second;
+                if (y >= x) break;
+                nn=0;
+                for (int ny=0;ny<deg[y];ny++) {
+                    int z=inc[y][ny].first, yz=inc[y][ny].second;
+                    if (z >= y) break;
+                    if (neighx[z]==-1) continue;
+                    int xz=neighx[z];
+                    neigh[nn]=z;
+                    neigh_edges[nn]={xz, yz};
+                    nn++;
+                }
+                for (int i=0;i<nn;i++) {
+                    int z = neigh[i], xz = neigh_edges[i].first, yz = neigh_edges[i].second;
+                    nn2 = 0;
+                    for (int j=i+1;j<nn;j++) {
+                        int w = neigh[j], xw = neigh_edges[j].first, yw = neigh_edges[j].second;
+                        if (adjacent(z,w)) {
+                            neigh2[nn2]=w;
+                            int zw=getEdgeId(z,w);
+                            neigh2_edges[nn2]={xw,yw,zw};
+                            nn2++;
+                        }
+                    }
+                    for (int i2=0;i2<nn2;i2++) {
+                        int z2 = neigh2[i2];
+                        int z2x=neigh2_edges[i2].first, z2y=neigh2_edges[i2].second, z2z=neigh2_edges[i2].third;
+                        for (int j2=i2+1;j2<nn2;j2++) {
+                            int z3 = neigh2[j2];
+                            int z3x=neigh2_edges[j2].first, z3y=neigh2_edges[j2].second, z3z=neigh2_edges[j2].third;
+                            if (adjacent(z2,z3)) {
+                                int zid=getEdgeId(z2,z3);
+                                C5[xy]++; C5[xz]++; C5[yz]++;
+                                C5[z2x]++; C5[z2y]++; C5[z2z]++;
+                                C5[z3x]++; C5[z3y]++; C5[z3z]++;
+                                C5[zid]++;
+                            }
+                        }
+                    }
+                }
+            }
+            for (int nx=0;nx<deg[x];nx++) {
+                int y=inc[x][nx].first, xy=inc[x][nx].second;
+                neighx[y]=-1;
+            }
+        }
+        endTime = clock();
+        printf("%.2f\n", (double)(endTime-startTime)/CLOCKS_PER_SEC);
+        startTime = endTime;
+        
+        // set up a system of equations relating orbits for every node
+        printf("stage 3 - building systems of equations\n");
+        int *common_x = (int*)calloc(n,sizeof(int));
+        int *common_x_list = (int*)malloc(n*sizeof(int)), nc_x=0;
+        int *common_y = (int*)calloc(n,sizeof(int));
+        int *common_y_list = (int*)malloc(n*sizeof(int)), nc_y=0;
+        frac_prev=-1;
+        
+        clock_t time1, time2;
+        double timeO4[12];
+        memset(timeO4,0,sizeof(timeO4));
+        
+        for (int x=0;x<n;x++) {
+            frac = 100LL*x/n;
+            if (frac!=frac_prev) {
+                printf("%d%%\r",frac);
+                frac_prev=frac;
+            }
+            
+            // common nodes of x and some other node
+            for (int i=0;i<nc_x;i++) common_x[common_x_list[i]]=0;
+            nc_x=0;
+            for (int nx=0;nx<deg[x];nx++) {
+                int a=adj[x][nx];
+                for (int na=0;na<deg[a];na++) {
+                    int z=adj[a][na];
+                    if (z==x) continue;
+                    if (common_x[z]==0) common_x_list[nc_x++]=z;
+                    common_x[z]++;
+                }
+            }
+            
+            for (int nx=0;nx<deg[x];nx++) {
+                int y=inc[x][nx].first, xy=inc[x][nx].second;
+                int e=xy;
+                if (y>=x) break;
+                
+                // common nodes of y and some other node
+                for (int i=0;i<nc_y;i++) common_y[common_y_list[i]]=0;
+                nc_y=0;
+                for (int ny=0;ny<deg[y];ny++) {
+                    int a=adj[y][ny];
+                    for (int na=0;na<deg[a];na++) {
+                        int z=adj[a][na];
+                        if (z==y) continue;
+                        if (common_y[z]==0) common_y_list[nc_y++]=z;
+                        common_y[z]++;
+                    }
+                }
+                
+                int64 f_66=0, f_65=0, f_62=0, f_61=0, f_60=0, f_51=0, f_50=0; // 11
+                int64 f_64=0, f_58=0, f_55=0, f_48=0, f_41=0, f_35=0; // 10
+                int64 f_63=0, f_59=0, f_57=0, f_54=0, f_53=0, f_52=0, f_47=0, f_40=0, f_39=0, f_34=0, f_33=0; // 9
+                int64 f_45=0, f_36=0, f_26=0, f_23=0, f_19=0; // 7
+                int64 f_49=0, f_38=0, f_37=0, f_32=0, f_25=0, f_22=0, f_18=0; // 6
+                int64 f_56=0, f_46=0, f_44=0, f_43=0, f_42=0, f_31=0, f_30=0; // 5
+                int64 f_27=0, f_17=0, f_15=0; // 4
+                int64 f_20=0, f_16=0, f_13=0; // 3
+                int64 f_29=0, f_28=0, f_24=0, f_21=0, f_14=0, f_12=0; // 2
+                
+                // smaller (3-node) graphlets
+                orbit[x][0] = deg[x];
+                for (int nx1=0;nx1<deg[x];nx1++) {
+                    int z=adj[x][nx1];
+                    if (z==y) continue;
+                    if (adjacent(y,z)) eorbit[e][1]++;
+                    else eorbit[e][0]++;
+                }
+                for (int ny=0;ny<deg[y];ny++) {
+                    int z=adj[y][ny];
+                    if (z==x) continue;
+                    if (!adjacent(x,z)) eorbit[e][0]++;
+                }
+                
+                // edge-orbit 11 = (14,14)
+                time1 = clock();
+                for (int nx1=0;nx1<deg[x];nx1++) {
+                    int a=adj[x][nx1], xa=inc[x][nx1].second;
+                    if (a==y || !adjacent(y,a)) continue;
+                    for (int nx2=nx1+1;nx2<deg[x];nx2++) {
+                        int b=adj[x][nx2], xb=inc[x][nx2].second;
+                        if (b==y || !adjacent(y,b) || !adjacent(a,b)) continue;
+                        int ya=getEdgeId(y,a), yb=getEdgeId(y,b), ab=getEdgeId(a,b);
+                        eorbit[e][11]++;
+                        f_66 += common3_get(TRIPLE(x,y,a))-1;
+                        f_66 += common3_get(TRIPLE(x,y,b))-1;
+                        f_65 += common3_get(TRIPLE(a,b,x))-1;
+                        f_65 += common3_get(TRIPLE(a,b,y))-1;
+                        f_62 += tri[xy]-2;
+                        f_61 += (tri[xa]-2)+(tri[xb]-2)+(tri[ya]-2)+(tri[yb]-2);
+                        f_60 += tri[ab]-2;
+                        f_51 += (deg[x]-3)+(deg[y]-3);
+                        f_50 += (deg[a]-3)+(deg[b]-3);
+                    }
+                }
+                time2 = clock();
+                timeO4[11]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 10 = (13,13)
+                time1 = clock();
+                for (int nx1=0;nx1<deg[x];nx1++) {
+                    int a=adj[x][nx1], xa=inc[x][nx1].second;
+                    if (a==y || !adjacent(y,a)) continue;
+                    for (int nx2=nx1+1;nx2<deg[x];nx2++) {
+                        int b=adj[x][nx2], xb=inc[x][nx2].second;
+                        if (b==y || !adjacent(y,b) || adjacent(a,b)) continue;
+                        int ya=getEdgeId(y,a), yb=getEdgeId(y,b);
+                        eorbit[e][10]++;
+                        f_64 += common3_get(TRIPLE(a,b,x))-1;
+                        f_64 += common3_get(TRIPLE(a,b,y))-1;
+                        f_58 += common2_get(PAIR(a,b))-2;
+                        f_55 += (tri[xa]-1)+(tri[xb]-1)+(tri[ya]-1)+(tri[yb]-1);
+                        f_48 += tri[xy]-2;
+                        f_41 += (deg[a]-2)+(deg[b]-2);
+                        f_35 += (deg[x]-3)+(deg[y]-3);
+                    }
+                }
+                time2 = clock();
+                timeO4[10]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 9 = (12,13)
+                time1 = clock();
+                for (int nx=0;nx<deg[x];nx++) {
+                    int a=adj[x][nx], xa=inc[x][nx].second;
+                    if (a==y) continue;
+                    for (int ny=0;ny<deg[y];ny++) {
+                        int b=adj[y][ny], yb=inc[y][ny].second;
+                        if (b==x || !adjacent(a,b)) continue;
+                        int adj_ya=adjacent(y,a), adj_xb=adjacent(x,b);
+                        if (adj_ya+adj_xb!=1) continue;
+                        int ab=getEdgeId(a,b);
+                        eorbit[e][9]++;
+                        if (adj_xb) {
+                            int xb=getEdgeId(x,b);
+                            f_63 += common3_get(TRIPLE(a,b,y))-1;
+                            f_59 += common3_get(TRIPLE(a,b,x));
+                            f_57 += common_y[a]-2;
+                            f_54 += tri[yb]-1;
+                            f_53 += tri[xa]-1;
+                            f_47 += tri[xb]-2;
+                            f_40 += deg[y]-2;
+                            f_39 += deg[a]-2;
+                            f_34 += deg[x]-3;
+                            f_33 += deg[b]-3;
+                        } else if (adj_ya) {
+                            int ya=getEdgeId(y,a);
+                            f_63 += common3_get(TRIPLE(a,b,x))-1;
+                            f_59 += common3_get(TRIPLE(a,b,y));
+                            f_57 += common_x[b]-2;
+                            f_54 += tri[xa]-1;
+                            f_53 += tri[yb]-1;
+                            f_47 += tri[ya]-2;
+                            f_40 += deg[x]-2;
+                            f_39 += deg[b]-2;
+                            f_34 += deg[y]-3;
+                            f_33 += deg[a]-3;
+                        }
+                        f_52 += tri[ab]-1;
+                    }
+                }
+                time2 = clock();
+                timeO4[9]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 8 = (10,11)
+                time1 = clock();
+                for (int nx=0;nx<deg[x];nx++) {
+                    int a=adj[x][nx];
+                    if (a==y || !adjacent(y,a)) continue;
+                    for (int nx1=0;nx1<deg[x];nx1++) {
+                        int b=adj[x][nx1];
+                        if (b==y || b==a || adjacent(y,b) || adjacent(a,b)) continue;
+                        eorbit[e][8]++;
+                    }
+                    for (int ny1=0;ny1<deg[y];ny1++) {
+                        int b=adj[y][ny1];
+                        if (b==x || b==a || adjacent(x,b) || adjacent(a,b)) continue;
+                        eorbit[e][8]++;
+                    }
+                }
+                time2 = clock();
+                timeO4[8]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 7 = (10,10)
+                time1 = clock();
+                for (int nx=0;nx<deg[x];nx++) {
+                    int a=adj[x][nx];
+                    if (a==y || !adjacent(y,a)) continue;
+                    for (int na=0;na<deg[a];na++) {
+                        int b=adj[a][na], ab=inc[a][na].second;
+                        if (b==x || b==y || adjacent(x,b) || adjacent(y,b)) continue;
+                        eorbit[e][7]++;
+                        f_45 += common_x[b]-1;
+                        f_45 += common_y[b]-1;
+                        f_36 += tri[ab];
+                        f_26 += deg[a]-3;
+                        f_23 += deg[b]-1;
+                        f_19 += (deg[x]-2)+(deg[y]-2);
+                    }
+                }
+                time2 = clock();
+                timeO4[7]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 6 = (9,11)
+                time1 = clock();
+                for (int ny1=0;ny1<deg[y];ny1++) {
+                    int a=adj[y][ny1], ya=inc[y][ny1].second;
+                    if (a==x || adjacent(x,a)) continue;
+                    for (int ny2=ny1+1;ny2<deg[y];ny2++) {
+                        int b=adj[y][ny2], yb=inc[y][ny2].second;
+                        if (b==x || adjacent(x,b) || !adjacent(a,b)) continue;
+                        int ab=getEdgeId(a,b);
+                        eorbit[e][6]++;
+                        f_49 += common3_get(TRIPLE(y,a,b));
+                        f_38 += tri[ab]-1;
+                        f_37 += tri[xy];
+                        f_32 += (tri[ya]-1)+(tri[yb]-1);
+                        f_25 += deg[y]-3;
+                        f_22 += deg[x]-1;
+                        f_18 += (deg[a]-2)+(deg[b]-2);
+                    }
+                }
+                for (int nx1=0;nx1<deg[x];nx1++) {
+                    int a=adj[x][nx1], xa=inc[x][nx1].second;
+                    if (a==y || adjacent(y,a)) continue;
+                    for (int nx2=nx1+1;nx2<deg[x];nx2++) {
+                        int b=adj[x][nx2], xb=inc[x][nx2].second;
+                        if (b==y || adjacent(y,b) || !adjacent(a,b)) continue;
+                        int ab=getEdgeId(a,b);
+                        eorbit[e][6]++;
+                        f_49 += common3_get(TRIPLE(x,a,b));
+                        f_38 += tri[ab]-1;
+                        f_37 += tri[xy];
+                        f_32 += (tri[xa]-1)+(tri[xb]-1);
+                        f_25 += deg[x]-3;
+                        f_22 += deg[y]-1;
+                        f_18 += (deg[a]-2)+(deg[b]-2);
+                    }
+                }
+                time2 = clock();
+                timeO4[6]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 5 = (8,8)
+                time1 = clock();
+                for (int nx=0;nx<deg[x];nx++) {
+                    int a=adj[x][nx], xa=inc[x][nx].second;
+                    if (a==y || adjacent(y,a)) continue;
+                    for (int ny=0;ny<deg[y];ny++) {
+                        int b=adj[y][ny], yb=inc[y][ny].second;
+                        if (b==x || adjacent(x,b) || !adjacent(a,b)) continue;
+                        int ab=getEdgeId(a,b);
+                        eorbit[e][5]++;
+                        f_56 += common3_get(TRIPLE(x,a,b));
+                        f_56 += common3_get(TRIPLE(y,a,b));
+                        f_46 += tri[xy];
+                        f_44 += tri[xa]+tri[yb];
+                        f_43 += tri[ab];
+                        f_42 += common_x[b]-2;
+                        f_42 += common_y[a]-2;
+                        f_31 += (deg[x]-2)+(deg[y]-2);
+                        f_30 += (deg[a]-2)+(deg[b]-2);
+                    }
+                }
+                time2 = clock();
+                timeO4[5]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 4 = (6,7)
+                time1 = clock();
+                for (int ny1=0;ny1<deg[y];ny1++) {
+                    int a=adj[y][ny1];
+                    if (a==x || adjacent(x,a)) continue;
+                    for (int ny2=ny1+1;ny2<deg[y];ny2++) {
+                        int b=adj[y][ny2];
+                        if (b==x || adjacent(x,b) || adjacent(a,b)) continue;
+                        eorbit[e][4]++;
+                        f_27 += tri[xy];
+                        f_17 += deg[y]-3;
+                        f_15 += (deg[a]-1)+(deg[b]-1);
+                    }
+                }
+                for (int nx1=0;nx1<deg[x];nx1++) {
+                    int a=adj[x][nx1];
+                    if (a==y || adjacent(y,a)) continue;
+                    for (int nx2=nx1+1;nx2<deg[x];nx2++) {
+                        int b=adj[x][nx2];
+                        if (b==y || adjacent(y,b) || adjacent(a,b)) continue;
+                        eorbit[e][4]++;
+                        f_27 += tri[xy];
+                        f_17 += deg[x]-3;
+                        f_15 += (deg[a]-1)+(deg[b]-1);
+                    }
+                }
+                time2 = clock();
+                timeO4[4]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 3 = (5,5)
+                time1 = clock();
+                for (int nx=0;nx<deg[x];nx++) {
+                    int a=adj[x][nx];
+                    if (a==y || adjacent(y,a)) continue;
+                    for (int ny=0;ny<deg[y];ny++) {
+                        int b=adj[y][ny];
+                        if (b==x || adjacent(x,b) || adjacent(a,b)) continue;
+                        eorbit[e][3]++;
+                        f_20 += tri[xy];
+                        f_16 += (deg[x]-2)+(deg[y]-2);
+                        f_13 += (deg[a]-1)+(deg[b]-1);
+                    }
+                }
+                time2 = clock();
+                timeO4[3]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // edge-orbit 2 = (4,5)
+                time1 = clock();
+                for (int ny=0;ny<deg[y];ny++) {
+                    int a=adj[y][ny];
+                    if (a==x || adjacent(x,a)) continue;
+                    for (int na=0;na<deg[a];na++) {
+                        int b=adj[a][na], ab=inc[a][na].second;
+                        if (b==y || adjacent(y,b) || adjacent(x,b)) continue;
+                        eorbit[e][2]++;
+                        f_29 += common_y[b]-1;
+                        f_28 += common_x[b];
+                        f_24 += tri[xy];
+                        f_21 += tri[ab];
+                        f_14 += deg[a]-2;
+                        f_12 += deg[b]-1;
+                    }
+                }
+                for (int nx=0;nx<deg[x];nx++) {
+                    int a=adj[x][nx];
+                    if (a==y || adjacent(y,a)) continue;
+                    for (int na=0;na<deg[a];na++) {
+                        int b=adj[a][na], ab=inc[a][na].second;
+                        if (b==x || adjacent(x,b) || adjacent(y,b)) continue;
+                        eorbit[e][2]++;
+                        f_29 += common_x[b]-1;
+                        f_28 += common_y[b];
+                        f_24 += tri[xy];
+                        f_21 += tri[ab];
+                        f_14 += deg[a]-2;
+                        f_12 += deg[b]-1;
+                    }
+                }
+                time2 = clock();
+                timeO4[2]+=1.0*(time2-time1)/CLOCKS_PER_SEC;
+                
+                // solve system of equations
+                eorbit[e][67]=C5[e];
+                eorbit[e][66]=(f_66-6*eorbit[e][67])/2;
+                eorbit[e][65]=(f_65-6*eorbit[e][67]);
+                eorbit[e][64]=(f_64-2*eorbit[e][66]);
+                eorbit[e][63]=(f_63-2*eorbit[e][65])/2;
+                eorbit[e][62]=(f_62-2*eorbit[e][66]-3*eorbit[e][67]);
+                eorbit[e][61]=(f_61-2*eorbit[e][65]-4*eorbit[e][66]-12*eorbit[e][67]);
+                eorbit[e][60]=(f_60-1*eorbit[e][65]-3*eorbit[e][67]);
+                eorbit[e][59]=(f_59-2*eorbit[e][65])/2;
+                eorbit[e][58]=(f_58-1*eorbit[e][64]-1*eorbit[e][66]);
+                eorbit[e][57]=(f_57-2*eorbit[e][63]-2*eorbit[e][64]-2*eorbit[e][65]);
+                eorbit[e][56]=(f_56-2*eorbit[e][63])/2;
+                eorbit[e][55]=(f_55-4*eorbit[e][62]-2*eorbit[e][64]-4*eorbit[e][66]);
+                eorbit[e][54]=(f_54-1*eorbit[e][61]-2*eorbit[e][63]-2*eorbit[e][65])/2;
+                eorbit[e][53]=(f_53-2*eorbit[e][59]-2*eorbit[e][64]-2*eorbit[e][65]);
+                eorbit[e][52]=(f_52-2*eorbit[e][59]-2*eorbit[e][63]-2*eorbit[e][65]);
+                eorbit[e][51]=(f_51-1*eorbit[e][61]-2*eorbit[e][62]-1*eorbit[e][65]-4*eorbit[e][66]-6*eorbit[e][67]);
+                eorbit[e][50]=(f_50-2*eorbit[e][60]-1*eorbit[e][61]-2*eorbit[e][65]-2*eorbit[e][66]-6*eorbit[e][67]);
+                eorbit[e][49]=(f_49-1*eorbit[e][59])/3;
+                eorbit[e][48]=(f_48-2*eorbit[e][62]-1*eorbit[e][66])/3;
+                eorbit[e][47]=(f_47-2*eorbit[e][59]-1*eorbit[e][61]-2*eorbit[e][65])/2;
+                eorbit[e][46]=(f_46-1*eorbit[e][57]-1*eorbit[e][63]);
+                eorbit[e][45]=(f_45-1*eorbit[e][52]-4*eorbit[e][58]-4*eorbit[e][60]);
+                eorbit[e][44]=(f_44-2*eorbit[e][56]-1*eorbit[e][57]-2*eorbit[e][63]);
+                eorbit[e][43]=(f_43-2*eorbit[e][56]-1*eorbit[e][63]);
+                eorbit[e][42]=(f_42-2*eorbit[e][56]-1*eorbit[e][57]-2*eorbit[e][63])/2;
+                eorbit[e][41]=(f_41-1*eorbit[e][55]-2*eorbit[e][58]-2*eorbit[e][62]-2*eorbit[e][64]-2*eorbit[e][66]);
+                eorbit[e][40]=(f_40-2*eorbit[e][54]-1*eorbit[e][55]-1*eorbit[e][57]-1*eorbit[e][61]-2*eorbit[e][63]-2*eorbit[e][64]-2*eorbit[e][65]);
+                eorbit[e][39]=(f_39-1*eorbit[e][52]-1*eorbit[e][53]-1*eorbit[e][57]-2*eorbit[e][59]-2*eorbit[e][63]-2*eorbit[e][64]-2*eorbit[e][65]);
+                eorbit[e][38]=(f_38-3*eorbit[e][49]-1*eorbit[e][56]-1*eorbit[e][59]);
+                eorbit[e][37]=(f_37-1*eorbit[e][53]-1*eorbit[e][59]);
+                eorbit[e][36]=(f_36-1*eorbit[e][52]-2*eorbit[e][60])/2;
+                eorbit[e][35]=(f_35-6*eorbit[e][48]-1*eorbit[e][55]-4*eorbit[e][62]-1*eorbit[e][64]-2*eorbit[e][66]);
+                eorbit[e][34]=(f_34-2*eorbit[e][47]-1*eorbit[e][53]-1*eorbit[e][55]-2*eorbit[e][59]-1*eorbit[e][61]-2*eorbit[e][64]-2*eorbit[e][65]);
+                eorbit[e][33]=(f_33-2*eorbit[e][47]-1*eorbit[e][52]-2*eorbit[e][54]-2*eorbit[e][59]-1*eorbit[e][61]-2*eorbit[e][63]-2*eorbit[e][65]);
+                eorbit[e][32]=(f_32-6*eorbit[e][49]-1*eorbit[e][53]-2*eorbit[e][59])/2;
+                eorbit[e][31]=(f_31-2*eorbit[e][42]-1*eorbit[e][44]-2*eorbit[e][46]-2*eorbit[e][56]-2*eorbit[e][57]-2*eorbit[e][63]);
+                eorbit[e][30]=(f_30-2*eorbit[e][42]-2*eorbit[e][43]-1*eorbit[e][44]-4*eorbit[e][56]-1*eorbit[e][57]-2*eorbit[e][63]);
+                eorbit[e][29]=(f_29-2*eorbit[e][38]-1*eorbit[e][45]-1*eorbit[e][52])/2;
+                eorbit[e][28]=(f_28-2*eorbit[e][43]-1*eorbit[e][45]-1*eorbit[e][52])/2;
+                eorbit[e][27]=(f_27-1*eorbit[e][34]-1*eorbit[e][47]);
+                eorbit[e][26]=(f_26-1*eorbit[e][33]-2*eorbit[e][36]-1*eorbit[e][50]-1*eorbit[e][52]-2*eorbit[e][60])/2;
+                eorbit[e][25]=(f_25-2*eorbit[e][32]-1*eorbit[e][37]-3*eorbit[e][49]-1*eorbit[e][53]-1*eorbit[e][59]);
+                eorbit[e][24]=(f_24-1*eorbit[e][39]-1*eorbit[e][45]-1*eorbit[e][52]);
+                eorbit[e][23]=(f_23-2*eorbit[e][36]-1*eorbit[e][45]-1*eorbit[e][52]-2*eorbit[e][58]-2*eorbit[e][60]);
+                eorbit[e][22]=(f_22-1*eorbit[e][37]-1*eorbit[e][44]-1*eorbit[e][53]-1*eorbit[e][56]-1*eorbit[e][59]);
+                eorbit[e][21]=(f_21-2*eorbit[e][38]-2*eorbit[e][43]-1*eorbit[e][52])/2;
+                eorbit[e][20]=(f_20-1*eorbit[e][40]-1*eorbit[e][54]);
+                eorbit[e][19]=(f_19-1*eorbit[e][33]-2*eorbit[e][41]-1*eorbit[e][45]-2*eorbit[e][50]-1*eorbit[e][52]-4*eorbit[e][58]-4*eorbit[e][60]);
+                eorbit[e][18]=(f_18-2*eorbit[e][32]-2*eorbit[e][38]-1*eorbit[e][44]-6*eorbit[e][49]-1*eorbit[e][53]-2*eorbit[e][56]-2*eorbit[e][59]);
+                eorbit[e][17]=(f_17-2*eorbit[e][25]-1*eorbit[e][27]-1*eorbit[e][32]-1*eorbit[e][34]-1*eorbit[e][47])/3;
+                eorbit[e][16]=(f_16-2*eorbit[e][20]-2*eorbit[e][22]-1*eorbit[e][31]-2*eorbit[e][40]-1*eorbit[e][44]-2*eorbit[e][54])/2;
+                eorbit[e][15]=(f_15-2*eorbit[e][25]-2*eorbit[e][29]-1*eorbit[e][31]-2*eorbit[e][32]-1*eorbit[e][34]-2*eorbit[e][42]-2*eorbit[e][47]);
+                eorbit[e][14]=(f_14-1*eorbit[e][18]-2*eorbit[e][21]-1*eorbit[e][30]-2*eorbit[e][38]-1*eorbit[e][39]-2*eorbit[e][43]-1*eorbit[e][52])/2;
+                eorbit[e][13]=(f_13-2*eorbit[e][22]-2*eorbit[e][28]-1*eorbit[e][31]-1*eorbit[e][40]-2*eorbit[e][44]-2*eorbit[e][54]);
+                eorbit[e][12]=(f_12-2*eorbit[e][21]-2*eorbit[e][28]-2*eorbit[e][29]-2*eorbit[e][38]-2*eorbit[e][43]-1*eorbit[e][45]-1*eorbit[e][52]);
+            }
+        }
+    }
+    catch (char const *s) {
+        error(s);
+    }
+    
+}
+ */
