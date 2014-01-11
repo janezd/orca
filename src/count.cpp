@@ -28,22 +28,18 @@
 using namespace std;
 
 
-//TODO: add 'const &' where appropriate
-
+// TODO: move precomputation of triangles to GraphData::GraphData or to a separate function
+// TODO: ... similar for other common code fragments
 
 typedef long long int64;
 typedef pair<int,int> PII;
 
 struct PAIR {
 	int a, b;
-    inline PAIR(int const &aa, int const &bb) {
-        if (aa < bb) {
-            a = aa; b = bb;
-        }
-        else {
-            a = bb; b = aa;
-        }
-    }
+    inline PAIR(int const aa, int const bb)
+    : a(min(aa, bb)),
+    b(max(aa, bb))
+    {}
 };
 
 bool operator <(const PAIR &x, const PAIR &y) {
@@ -65,11 +61,14 @@ struct hash_PAIR {
 
 struct TRIPLE {
 	int a, b, c;
-	TRIPLE(int a0, int b0, int c0)
+	TRIPLE(int const a0, int const b0, int const c0)
     : a(a0), b(b0), c(c0) {
-		if (a > b) swap(a, b);
-		if (b > c) swap(b, c);
-		if (a > b) swap(a, b);
+		if (a > b)
+            swap(a, b);
+		if (b > c)
+            swap(b, c);
+		if (a > b)
+            swap(a, b);
 	}
 };
 
@@ -109,38 +108,38 @@ struct GraphData {
     PII **inc; // inc[x] - incidence list of node x: (y, edge id)
     int *adj_matrix; // compressed adjacency matrix; initialized iff smaller than 100 MB
     
-    GraphData(PAIR *edges, int *dim_edges);
+    GraphData(PAIR * const edges, int const * const dim_edges);
     
     
-    inline bool adjacent_list(int const &x, int const &y) const
+    inline bool adjacent_list(int const x, int const y) const
     {
         return binary_search(adj[x], adj[x] + deg[x], y);
     }
     
-    inline bool adjacent_matrix(int const &x, int const &y) const
+    inline bool adjacent_matrix(int const x, int const y) const
     {
         return adj_matrix[(x * n_nodes + y) / adj_chunk] & (1 << ((x * n_nodes + y) % adj_chunk));
     }
     
-    inline bool adjacent(int const &x, int const &y) const {
+    inline bool adjacent(int const x, int const y) const {
         return adj_matrix ? adjacent_matrix(x, y) : adjacent_list(x, y);
     }
 };
 
 
-GraphData::GraphData(PAIR *p_edges, int *dim_edges)
-: n_nodes(0), n_edges(dim_edges[1]), d_max(0),
-  edges(p_edges), edges_end(edges + dim_edges[1]),
-  deg(NULL), inc(NULL), adj_matrix(NULL)
+GraphData::GraphData(PAIR * const p_edges, int const * const dim_edges)
+: n_nodes(0),
+  n_edges(dim_edges[1]),
+  d_max(0),
+  edges(p_edges),
+  edges_end(edges + dim_edges[1]),
+  deg(NULL),
+  inc(NULL),
+  adj_matrix(NULL)
 {
     if (dim_edges[0] != 2) {
         throw "Incorrect size of edges matrix";
     }
-    /* TODO Fix
-    if (int(set<PAIR>(edges, edges_end).size()) ! = n_edges) {
-        throw("Input file contains duplicate undirected edges.");
-    }
-    */
     PAIR *edge;
     int i;
     for(edge = edges; edge != edges_end; edge++) {
@@ -173,7 +172,7 @@ GraphData::GraphData(PAIR *p_edges, int *dim_edges)
     if ((int64)n_nodes * n_nodes < 100LL * 1024 * 1024 * 8) {
         adj_matrix = (int *)S_alloc((n_nodes * n_nodes) / adj_chunk + 1, sizeof(int));
         for (edge = edges; edge != edges_end; edge++) {
-            int &a = edge->a, &b = edge->b;
+            int const &a = edge->a, &b = edge->b;
             adj_matrix[(a * n_nodes + b) / adj_chunk] |= (1 << ((a * n_nodes + b) % adj_chunk));
             adj_matrix[(b * n_nodes + a) / adj_chunk] |= (1 << ((b * n_nodes + a) % adj_chunk));
         }
@@ -185,9 +184,9 @@ GraphData::GraphData(PAIR *p_edges, int *dim_edges)
         adj[i] = (int *)R_alloc(deg[i], sizeof(int));
         inc[i] = (PII *)R_alloc(deg[i], sizeof(PII));
     }
-    int *d = (int *)S_alloc(n_nodes, sizeof(int));
+    int * const d = (int *)S_alloc(n_nodes, sizeof(int));
     for (i = 0; i < n_edges; i++) {
-        int &a = edges[i].a, &b = edges[i].b;
+        int const &a = edges[i].a, &b = edges[i].b;
         adj[a][d[a]] = b;
         adj[b][d[b]] = a;
         inc[a][d[a]] = PII(b, i);
@@ -207,7 +206,7 @@ GraphData::GraphData(PAIR *p_edges, int *dim_edges)
 
 /** count graphlets on 4 nodes */
 
-extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
+extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * const orbits)
 {
     try {
         int nn;
@@ -221,9 +220,9 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
         PII const *const *const inc = data.inc;
         
         // precompute triangles that span over edges
-        int *tri = (int *)S_alloc(m, sizeof(int));
+        int * const tri = (int *)S_alloc(m, sizeof(int));
         for (int i = 0; i < m; i++) {
-            int x = edges[i].a, y = edges[i].b;
+            int const &x = edges[i].a, &y = edges[i].b;
             for (int xi = 0,yi = 0; xi < deg[x] && yi < deg[y]; ) {
                 if (adj[x][xi] == adj[y][yi]) {
                     tri[i]++;
@@ -238,17 +237,17 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
             }
         }
         
-        int64 *C4 = (int64 *)S_alloc(data.n_nodes, sizeof(int64));
-        int *neigh = (int *)S_alloc(n, sizeof(int));
+        int64 * const C4 = (int64 *)S_alloc(data.n_nodes, sizeof(int64));
+        int * const neigh = (int *)S_alloc(n, sizeof(int));
         
         for (int x = 0; x < data.n_nodes; x++) {
             for (int nx = 0; nx < data.deg[x]; nx++) {
-                int y = adj[x][nx];
+                int const &y = adj[x][nx];
                 if (y >= x)
                     break;
                 nn = 0;
                 for (int ny = 0; ny < data.deg[y]; ny++) {
-                    int z = adj[y][ny];
+                    int const &z = adj[y][ny];
                     if (z >= y)
                         break;
                     if (!data.adjacent(x, z))
@@ -256,9 +255,9 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
                     neigh[nn++] = z;
                 }
                 for (int i = 0; i < nn; i++) {
-                    int z = neigh[i];
+                    int const &z = neigh[i];
                     for (int j = i + 1; j < nn; j++) {
-                        int zz = neigh[j];
+                        int const &zz = neigh[j];
                         if (data.adjacent(z,zz)) {
                             C4[x]++;
                             C4[y]++;
@@ -271,8 +270,8 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
         }
         
         // set up a system of equations relating orbits for every node
-        int *common = (int *)S_alloc(n, sizeof(int));
-        int *common_list = (int *)S_alloc(n, sizeof(int)), nc = 0;
+        int * const common = (int *)S_alloc(n, sizeof(int));
+        int * const common_list = (int *)S_alloc(n, sizeof(int)), nc = 0;
         for (int x = 0; x < n; x++) {
             int64 f_12_14 = 0, f_10_13 = 0;
             int64 f_13_14 = 0, f_11_13 = 0;
@@ -288,9 +287,9 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
             ORBIT(x, 0) = deg[x];
             // x - middle node
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
-                int y = inc[x][nx1].first, ey = inc[x][nx1].second;
+                int const &y = inc[x][nx1].first, &ey = inc[x][nx1].second;
                 for (int ny = 0;ny < deg[y];ny++) {
-                    int z = inc[y][ny].first, ez = inc[y][ny].second;
+                    int const &z = inc[y][ny].first, &ez = inc[y][ny].second;
                     if (data.adjacent(x,z)) { // triangle
                         if (z < y) {
                             f_12_14 += tri[ez] - 1;
@@ -304,7 +303,7 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
                     }
                 }
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int z = inc[x][nx2].first, ez = inc[x][nx2].second;
+                    int const &z = inc[x][nx2].first, &ez = inc[x][nx2].second;
                     if (data.adjacent(y, z)) { // triangle
                         ORBIT(x, 3)++;
                         f_13_14 += (tri[ey] -1) + (tri[ez] - 1);
@@ -318,9 +317,9 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
             }
             // x - side node
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
-                int y = inc[x][nx1].first, ey = inc[x][nx1].second;
+                int const &y = inc[x][nx1].first, &ey = inc[x][nx1].second;
                 for (int ny = 0;ny < deg[y]; ny++) {
-                    int z = inc[y][ny].first, ez = inc[y][ny].second;
+                    int const &z = inc[y][ny].first, &ez = inc[y][ny].second;
                     if (x == z)
                         continue;
                     if (!data.adjacent(x,z)) { // path
@@ -353,7 +352,7 @@ extern "C" void count4(PAIR *p_edges, int *dim_edges, int *orbits)
 }
 
 
-extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
+extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * const orbits)
 {
     try {
         int nn, nn2;
@@ -377,13 +376,13 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
         
         for (int x = 0; x < n; x++) {
             for (int n1 = 0; n1 < deg[x]; n1++) {
-                int a = adj[x][n1];
+                int const &a = adj[x][n1];
                 for (int n2 = n1 + 1; n2 < deg[x]; n2++) {
-                    int b = adj[x][n2];
+                    int const &b = adj[x][n2];
                     common2[PAIR(a, b)]++;
                     for (int n3 = n2 + 1; n3 < deg[x]; n3++) {
-                        int c = adj[x][n3];
-                        int st = data.adjacent(a, b) + data.adjacent(a, c) + data.adjacent(b, c);
+                        int const &c = adj[x][n3];
+                        int const st = data.adjacent(a, b) + data.adjacent(a, c) + data.adjacent(b, c);
                         if (st < 2)
                             continue;
                         common3[TRIPLE(a, b, c)]++;
@@ -393,9 +392,9 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
         }
         
         // precompute triangles that span over edges
-        int *tri = (int *)S_alloc(m, sizeof(int));
+        int * const tri = (int *)S_alloc(m, sizeof(int));
         for (int i = 0; i < m; i++) {
-            int x = edges[i].a, y = edges[i].b;
+            int const &x = edges[i].a, &y = edges[i].b;
             for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
                 if (adj[x][xi] == adj[y][yi]) {
                     tri[i]++;
@@ -412,17 +411,17 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
         }
         
         // count full graphlets
-        int64 *C5 = (int64 *)S_alloc(n, sizeof(int64));
-        int *neigh = (int *)R_alloc(n, sizeof(int));
-        int *neigh2 = (int *)R_alloc(n, sizeof(int));
+        int64 * const C5 = (int64 *)S_alloc(n, sizeof(int64));
+        int * const neigh = (int *)R_alloc(n, sizeof(int));
+        int * const neigh2 = (int *)R_alloc(n, sizeof(int));
         for (int x = 0; x < n; x++) {
             for (int nx = 0; nx < deg[x]; nx++) {
-                int y = adj[x][nx];
+                int const &y = adj[x][nx];
                 if (y >= x)
                     break;
                 nn = 0;
                 for (int ny = 0; ny < deg[y]; ny++) {
-                    int z = adj[y][ny];
+                    int const &z = adj[y][ny];
                     if (z >= y)
                         break;
                     if (data.adjacent(x,z)) {
@@ -430,18 +429,18 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                     }
                 }
                 for (int i = 0; i < nn; i++) {
-                    int z = neigh[i];
+                    int const &z = neigh[i];
                     nn2 = 0;
                     for (int j = i + 1; j < nn; j++) {
-                        int zz = neigh[j];
+                        int const &zz = neigh[j];
                         if (data.adjacent(z,zz)) {
                             neigh2[nn2++] = zz;
                         }
                     }
                     for (int i2 = 0; i2 < nn2; i2++) {
-                        int zz = neigh2[i2];
+                        int const &zz = neigh2[i2];
                         for (int j2 = i2 + 1; j2 < nn2; j2++) {
-                            int zzz = neigh2[j2];
+                            int const &zzz = neigh2[j2];
                             if (data.adjacent(zz,zzz)) {
                                 C5[x]++;
                                 C5[y]++;
@@ -455,10 +454,10 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
             }
         }
         
-        int *common_x = (int *)S_alloc(n, sizeof(int));
-        int *common_x_list = (int *)R_alloc(n, sizeof(int)), ncx = 0;
-        int *common_a = (int *)S_alloc(n, sizeof(int));
-        int *common_a_list = (int *)R_alloc(n, sizeof(int)), nca = 0;
+        int * const common_x = (int *)S_alloc(n, sizeof(int));
+        int * const common_x_list = (int *)R_alloc(n, sizeof(int)), ncx = 0;
+        int * const common_a = (int *)S_alloc(n, sizeof(int));
+        int * const common_a_list = (int *)R_alloc(n, sizeof(int)), nca = 0;
         
         // set up a system of equations relating orbit counts
         for (int x = 0; x < n; x++) {
@@ -470,16 +469,16 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
             // smaller graphlets
             ORBIT(x, 0) = deg[x];
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
-                int a = adj[x][nx1];
+                int const &a = adj[x][nx1];
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int b = adj[x][nx2];
+                    int const &b = adj[x][nx2];
                     if (data.adjacent(a, b))
                         ORBIT(x, 3)++;
                     else
                         ORBIT(x, 2)++;
                 }
                 for (int na = 0; na < deg[a]; na++) {
-                    int b = adj[a][na];
+                    int const &b = adj[a][na];
                     if (b != x && !data.adjacent(x, b)) {
                         ORBIT(x, 1)++;
                         if (common_x[b] == 0)
@@ -502,13 +501,13 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
             int64 f_23 = 0, f_21 = 0; // 7
             
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
-                int a = inc[x][nx1].first, xa = inc[x][nx1].second;
+                int const &a = inc[x][nx1].first, &xa = inc[x][nx1].second;
                 
                 for (int i = 0; i < nca; i++)
                     common_a[common_a_list[i]] = 0;
                 nca = 0;
                 for (int na = 0;na < deg[a]; na++) {
-                    int b = adj[a][na];
+                    int const &b = adj[a][na];
                     for (int nb = 0; nb < deg[b]; nb++) {
                         int c = adj[b][nb];
                         if ((c==a) || data.adjacent(a, c))
@@ -521,11 +520,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-14 (tetrahedron)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (!data.adjacent(a,b))
                         continue;
                     for (int nx3 = nx2+1; nx3 < deg[x]; nx3++) {
-                        int c = inc[x][nx3].first, xc = inc[x][nx3].second;
+                        int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if (!data.adjacent(a, c) || !data.adjacent(b, c))
                             continue;
                         ORBIT(x, 14)++;
@@ -544,11 +543,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-13 (diamond)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int nx3 = nx2 + 1; nx3 < deg[x]; nx3++) {
-                        int c = inc[x][nx3].first, xc = inc[x][nx3].second;
+                        int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if (!data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(x, 13)++;
@@ -567,11 +566,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-12 (diamond)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int na = 0; na < deg[a]; na++) {
-                        int c = inc[a][na].first, ac = inc[a][na].second;
+                        int const &c = inc[a][na].first, &ac = inc[a][na].second;
                         if ((c == x) || data.adjacent(x, c) || !data.adjacent(b, c))
                             continue;
                         ORBIT(x, 12)++;
@@ -587,11 +586,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-8 (cycle)
                 for (int nx2  =nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (data.adjacent(a, b))
                         continue;
                     for (int na = 0; na < deg[a]; na++) {
-                        int c = inc[a][na].first, ac = inc[a][na].second;
+                        int const &c = inc[a][na].first, &ac = inc[a][na].second;
                         if ((c == x) || data.adjacent(x, c) || !data.adjacent(b, c))
                             continue;
                         ORBIT(x, 8)++;
@@ -608,11 +607,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-11 (paw)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int nx3 = 0; nx3 < deg[x]; nx3++) {
-                        int c = inc[x][nx3].first, xc = inc[x][nx3].second;
+                        int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if ((c == a) || (c==b) || data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(x, 11)++;
@@ -625,11 +624,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-10 (paw)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int nb = 0; nb < deg[b]; nb++) {
-                        int c = inc[b][nb].first, bc = inc[b][nb].second;
+                        int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
                         if ((c == x) || (c == a) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(x, 10)++;
@@ -643,11 +642,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-9 (paw)
                 for (int na1 = 0; na1 < deg[a]; na1++) {
-                    int b = inc[a][na1].first, ab = inc[a][na1].second;
+                    int const &b = inc[a][na1].first, &ab = inc[a][na1].second;
                     if ((b == x) || data.adjacent(x, b))
                         continue;
                     for (int na2 = na1 + 1; na2 < deg[a]; na2++) {
-                        int c = inc[a][na2].first, ac = inc[a][na2].second;
+                        int const &c = inc[a][na2].first, &ac = inc[a][na2].second;
                         if ((c == x) || !data.adjacent(b, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(x, 9)++;
@@ -662,11 +661,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-4 (path)
                 for (int na = 0; na < deg[a]; na++) {
-                    int b = inc[a][na].first, ab = inc[a][na].second;
+                    int const &b = inc[a][na].first, &ab = inc[a][na].second;
                     if ((b == x) || data.adjacent(x, b))
                         continue;
                     for (int nb = 0;nb < deg[b]; nb++) {
-                        int c = inc[b][nb].first, bc = inc[b][nb].second;
+                        int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
                         if ((c == a) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(x, 4)++;
@@ -681,11 +680,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-5 (path)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if ((b==a) || data.adjacent(a, b))
                         continue;
                     for (int nb = 0; nb < deg[b]; nb++) {
-                        int c = inc[b][nb].first, bc = inc[b][nb].second;
+                        int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
                         if ((c == x) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(x, 5)++;
@@ -695,11 +694,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-6 (claw)
                 for (int na1 = 0;na1 < deg[a]; na1++) {
-                    int b = inc[a][na1].first, ab = inc[a][na1].second;
+                    int const &b = inc[a][na1].first, &ab = inc[a][na1].second;
                     if ((b == x) || data.adjacent(x, b))
                         continue;
                     for (int na2 = na1 + 1; na2 < deg[a]; na2++) {
-                        int c = inc[a][na2].first, ac = inc[a][na2].second;
+                        int const &c = inc[a][na2].first, &ac = inc[a][na2].second;
                         if ((c == x) || data.adjacent(x,c) || data.adjacent(b,c))
                             continue;
                         ORBIT(x, 6)++;
@@ -711,11 +710,11 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
                 
                 // x = orbit-7 (claw)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int b = inc[x][nx2].first, xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
                     if (data.adjacent(a, b))
                         continue;
                     for (int nx3 = nx2 + 1; nx3 < deg[x]; nx3++) {
-                        int c = inc[x][nx3].first, xc = inc[x][nx3].second;
+                        int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if (data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(x, 7)++;
@@ -794,7 +793,7 @@ extern "C" void count5(PAIR *p_edges, int *dim_edges, int *orbits)
 
 
 /** count edge orbits of graphlets on max 4 nodes */
-extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
+extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
     try {
         GraphData data(p_edges, dim_edges);
         
@@ -806,7 +805,7 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
         PII const *const *const inc = data.inc;
         
         // precompute triangles that span over edges
-        int *tri = (int *)S_alloc(m, sizeof(int));
+        int *const tri = (int *)S_alloc(m, sizeof(int));
         for (int i = 0; i < m; i++) {
             int const &x = edges[i].a, &y = edges[i].b;
             for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
@@ -825,11 +824,11 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
         }
         
         // count full graphlets
-        int64 *C4 = (int64 *)S_alloc(m, sizeof(int64));
-        int *neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
+        int64 * const C4 = (int64 *)S_alloc(m, sizeof(int64));
+        int * const neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
         memset(neighx, -1, n * sizeof(int));
-        int *neigh = (int *)R_alloc(n, sizeof(int)), nn; // lookup table - common neighbors of x and y
-        PII *neigh_edges = (PII *)R_alloc(n, sizeof(PII)); // list of common neighbors of x and y
+        int * const neigh = (int *)R_alloc(n, sizeof(int)), nn; // lookup table - common neighbors of x and y
+        PII * const neigh_edges = (PII *)R_alloc(n, sizeof(PII)); // list of common neighbors of x and y
         for (int x = 0; x < n; x++) {
             for (int nx = 0; nx < deg[x]; nx++) {
                 int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
@@ -852,7 +851,7 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
                     nn++;
                 }
                 for (int i = 0; i < nn; i++) {
-                    int z = neigh[i], xz = neigh_edges[i].first, yz = neigh_edges[i].second;
+                    int const &z = neigh[i], &xz = neigh_edges[i].first, &yz = neigh_edges[i].second;
                     for (int j = i + 1; j < nn; j++) {
                         int const &w = neigh[j], &xw = neigh_edges[j].first, &yw = neigh_edges[j].second;
                         if (data.adjacent(z, w)) {
@@ -876,21 +875,21 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
         // count full graphlets for the smallest edge
         for (int x = 0; x < n; x++) {
             for (int nx = deg[x] - 1; nx >= 0; nx--) {
-                int const &y = inc[x][nx].first, xy = inc[x][nx].second;
+                int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
                 if (y <= x)
                     break;
                 nn = 0;
                 for (int ny = deg[y] - 1; ny >= 0; ny--) {
-                    int z = adj[y][ny];
+                    int const &z = adj[y][ny];
                     if (z <= y)
                         break;
                     if (!data.adjacent(x, z)) continue;
                     neigh[nn++] = z;
                 }
                 for (int i = 0; i < nn; i++) {
-                    int z = neigh[i];
+                    int const &z = neigh[i];
                     for (int j = i + 1; j < nn; j++) {
-                        int zz = neigh[j];
+                        int const &zz = neigh[j];
                         if (data.adjacent(z, zz)) {
                             C4[xy]++;
                         }
@@ -900,8 +899,8 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
         }
         
         // set up a system of equations relating orbits for every node
-        int *common = (int *)S_alloc(n, sizeof(int));
-        int *common_list = (int *)R_alloc(n, sizeof(int)), nc = 0;
+        int *const common = (int *)S_alloc(n, sizeof(int));
+        int *const common_list = (int *)R_alloc(n, sizeof(int)), nc = 0;
         for (int x = 0; x < n; x++) {
             // common nodes of x and some other node
             for (int i = 0; i < nc; i++)
@@ -910,7 +909,7 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
             for (int nx = 0; nx<deg[x];nx++) {
                 int const &y = adj[x][nx];
                 for (int ny = 0; ny < deg[y]; ny++) {
-                    int z = adj[y][ny];
+                    int const &z = adj[y][ny];
                     if (z == x)
                         continue;
                     if (common[z] == 0)
@@ -923,7 +922,7 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
                 int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
                 int const &e = xy;
                 for (int n1 = 0; n1 < deg[x]; n1++) {
-                    int z = inc[x][n1].first, xz = inc[x][n1].second;
+                    int const &z = inc[x][n1].first, &xz = inc[x][n1].second;
                     if (z == y)
                         continue;
                     if (data.adjacent(y, z)) { // triangle
@@ -938,7 +937,7 @@ extern "C" void ecount4(PAIR *p_edges, int *dim_edges, int *orbits) {
                     }
                 }
                 for (int n1 = 0; n1 < deg[y]; n1++) {
-                    int const &z = inc[y][n1].first, yz = inc[y][n1].second;
+                    int const &z = inc[y][n1].first, &yz = inc[y][n1].second;
                     if (z == x)
                         continue;
                     if (!data.adjacent(x, z)) { // path x-y-z
