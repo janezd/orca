@@ -29,14 +29,8 @@ using namespace std;
 
 
 typedef long long int64;
-typedef pair<int,int> PII;
 
-struct PAIR {
-	int a, b;
-    inline PAIR(int const aa, int const bb)
-    : a(min(aa, bb)), b(max(aa, bb))
-    {}
-};
+typedef pair<int,int> PII;
 
 struct TIII {
     int first, second, third;
@@ -45,26 +39,33 @@ struct TIII {
     {}
 };
 
-
-bool operator <(const PAIR &x, const PAIR &y) {
-	if (x.a == y.a)
-        return x.b < y.b;
-	else
-        return x.a < y.a;
-}
-
-bool operator ==(const PAIR &x, const PAIR &y) {
-	return x.a == y.a && x.b == y.b;
-}
+struct PAIR {
+	int a, b;
+    
+    inline PAIR(int const aa, int const bb)
+    : a(min(aa, bb)), b(max(aa, bb))
+    {}
+    
+    inline bool operator <(const PAIR &other) const {
+        return (a < other.a) || (a == other.a && b < other.b);
+    }
+    
+    inline bool operator ==(const PAIR &other) const {
+        return a == other.a && b == other.b;
+    }
+};
 
 struct hash_PAIR {
-	size_t operator()(const PAIR &x) const {
-		return (x.a << 8) ^ (x.b << 0);
-	}
+    inline size_t operator()(PAIR const &x) const {
+        return (x.a << 8) ^ (x.b << 0);
+    }
 };
+
+
 
 struct TRIPLE {
 	int a, b, c;
+
 	TRIPLE(int const a0, int const b0, int const c0)
     : a(a0), b(b0), c(c0) {
 		if (a > b)
@@ -74,24 +75,20 @@ struct TRIPLE {
 		if (a > b)
             swap(a, b);
 	}
+
+    inline bool operator <(TRIPLE const &other) const {
+        return (a < other.a) ||
+               (a == other.a && (b < other.b ||
+                                 (b == other.b && c < other.c)));
+    }
+    
+    inline bool operator ==(TRIPLE const &other) const {
+        return a == other.a && b == other.b && c == other.c;
+    }
 };
 
-bool operator <(const TRIPLE &x, const TRIPLE &y) {
-	if (x.a == y.a) {
-		if (x.b == y.b)
-            return x.c < y.c;
-		else
-            return x.b < y.b;
-	} else
-        return x.a < y.a;
-}
-
-bool operator ==(const TRIPLE &x, const TRIPLE &y) {
-	return x.a == y.a && x.b == y.b && x.c == y.c;
-}
-
 struct hash_TRIPLE {
-	size_t operator ()(const TRIPLE &x) const {
+	inline size_t operator ()(TRIPLE const &x) const {
 		return (x.a << 16) ^ (x.b << 8) ^ (x.c << 0);
 	}
 };
