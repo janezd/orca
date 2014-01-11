@@ -255,8 +255,8 @@ void GraphData::common_2_3(
     }
 }
 
-#define ORBIT(node,orb) (orbits[(node) + (orb) * n])
-#define EORBIT(node,orb) (orbits[(node) + (orb) * m])
+#define ORBIT(orb)  orbits[x + orb * n]
+#define EORBIT(orb) orbits[e + orb * m]
 
 #define common3_get(x) (((common3_it = common3.find(x)) != common3.end()) ? (common3_it->second) : 0)
 #define common2_get(x) (((common2_it = common2.find(x)) != common2.end()) ? (common2_it->second) : 0)
@@ -327,7 +327,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
             }
             nc = 0;
             
-            ORBIT(x, 0) = deg[x];
+            ORBIT(0) = deg[x];
             // x - middle node
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
                 int const &y = inc[x][nx1].first, &ey = inc[x][nx1].second;
@@ -348,11 +348,11 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &z = inc[x][nx2].first, &ez = inc[x][nx2].second;
                     if (data.adjacent(y, z)) { // triangle
-                        ORBIT(x, 3)++;
+                        ORBIT(3)++;
                         f_13_14 += (tri[ey] -1) + (tri[ez] - 1);
                         f_11_13 += (deg[x] - 1 - tri[ey]) + (deg[x] - 1 - tri[ez]);
                     } else { // path
-                        ORBIT(x, 2)++;
+                        ORBIT(2)++;
                         f_7_11 += (deg[x] - 1 - tri[ey] - 1) + (deg[x] - 1 - tri[ez] - 1);
                         f_5_8 += (deg[y] - 1 - tri[ey]) + (deg[z] - 1 - tri[ez]);
                     }
@@ -366,7 +366,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
                     if (x == z)
                         continue;
                     if (!data.adjacent(x,z)) { // path
-                        ORBIT(x, 1)++;
+                        ORBIT(1)++;
                         f_6_9 += (deg[y] - 1 - tri[ey] - 1);
                         f_9_12 += tri[ez];
                         f_4_8 += (deg[z] - 1 - tri[ez]);
@@ -376,17 +376,17 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
             }
             
             // solve system of equations
-            ORBIT(x, 14) = (f_14);
-            ORBIT(x, 13) = (f_13_14 - 6 * f_14) / 2;
-            ORBIT(x, 12) = (f_12_14 - 3 * f_14);
-            ORBIT(x, 11) = (f_11_13 - f_13_14 + 6 * f_14) / 2;
-            ORBIT(x, 10) = (f_10_13 - f_13_14 + 6 * f_14);
-            ORBIT(x, 9) = (f_9_12-2 * f_12_14 + 6 * f_14) / 2;
-            ORBIT(x, 8) = (f_8_12-2 * f_12_14 + 6 * f_14) / 2;
-            ORBIT(x, 7) = (f_13_14 + f_7_11 - f_11_13 - 6 * f_14) / 6;
-            ORBIT(x, 6) = (2 * f_12_14 + f_6_9 - f_9_12 - 6 * f_14) / 2;
-            ORBIT(x, 5) = (2 * f_12_14 + f_5_8 - f_8_12 - 6 * f_14);
-            ORBIT(x, 4) = (2 * f_12_14 + f_4_8 - f_8_12 - 6 * f_14);
+            ORBIT(14) = (f_14);
+            ORBIT(13) = (f_13_14 - 6 * f_14) / 2;
+            ORBIT(12) = (f_12_14 - 3 * f_14);
+            ORBIT(11) = (f_11_13 - f_13_14 + 6 * f_14) / 2;
+            ORBIT(10) = (f_10_13 - f_13_14 + 6 * f_14);
+            ORBIT(9) = (f_9_12-2 * f_12_14 + 6 * f_14) / 2;
+            ORBIT(8) = (f_8_12-2 * f_12_14 + 6 * f_14) / 2;
+            ORBIT(7) = (f_13_14 + f_7_11 - f_11_13 - 6 * f_14) / 6;
+            ORBIT(6) = (2 * f_12_14 + f_6_9 - f_9_12 - 6 * f_14) / 2;
+            ORBIT(5) = (2 * f_12_14 + f_5_8 - f_8_12 - 6 * f_14);
+            ORBIT(4) = (2 * f_12_14 + f_4_8 - f_8_12 - 6 * f_14);
         }
     }
     catch (char const *s) {
@@ -512,13 +512,13 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
                         continue;
                     if (data.adjacent(y, z)) { // triangle
                         if (x < y) {
-                            EORBIT(e, 1)++;
-                            EORBIT(e, 10) += tri[xy] - 1;
-                            EORBIT(e, 7) += deg[z] - 2;
-                            printf("%i %i %i %i %i\n", x, y, z, e, EORBIT(e, 1));
+                            EORBIT(1)++;
+                            EORBIT(10) += tri[xy] - 1;
+                            EORBIT(7) += deg[z] - 2;
+                            printf("%i %i %i %i %i\n", x, y, z, e, EORBIT(1));
                         }
-                        EORBIT(e, 9) += tri[xz] - 1;
-                        EORBIT(e, 8) += deg[x] - 2;
+                        EORBIT(9) += tri[xz] - 1;
+                        EORBIT(8) += deg[x] - 2;
                     }
                 }
                 for (int n1 = 0; n1 < deg[y]; n1++) {
@@ -526,28 +526,28 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
                     if (z == x)
                         continue;
                     if (!data.adjacent(x, z)) { // path x-y-z
-                        EORBIT(e, 0)++;
-                        EORBIT(e, 6) += tri[yz];
-                        EORBIT(e, 5) += common[z]  - 1;
-                        EORBIT(e, 4) += deg[y] - 2;
-                        EORBIT(e, 3) += deg[x] - 1;
-                        EORBIT(e, 2) += deg[z] - 1;
+                        EORBIT(0)++;
+                        EORBIT(6) += tri[yz];
+                        EORBIT(5) += common[z]  - 1;
+                        EORBIT(4) += deg[y] - 2;
+                        EORBIT(3) += deg[x] - 1;
+                        EORBIT(2) += deg[z] - 1;
                     }
                 }
             }
         }
         // solve system of equations
         for (int e = 0; e < m; e++) {
-            EORBIT(e, 11) = C4[e];
-            EORBIT(e, 10) = (EORBIT(e, 10)- 2 * EORBIT(e, 11)) / 2;
-            EORBIT(e, 9) = (EORBIT(e, 9) - 4 * EORBIT(e, 11));
-            EORBIT(e, 8) = (EORBIT(e, 8) - EORBIT(e, 9) - 4 * EORBIT(e, 10) - 4 * EORBIT(e, 11));
-            EORBIT(e, 7) = (EORBIT(e, 7) - EORBIT(e, 9) - 2 * EORBIT(e, 11));
-            EORBIT(e, 6) = (EORBIT(e, 6) - EORBIT(e, 9)) / 2;
-            EORBIT(e, 5) = (EORBIT(e, 5) - EORBIT(e, 9)) / 2;
-            EORBIT(e, 4) = (EORBIT(e, 4) - 2 * EORBIT(e, 6) - EORBIT(e, 8) - EORBIT(e, 9)) / 2;
-            EORBIT(e, 3) = (EORBIT(e, 3) - 2 * EORBIT(e, 5) - EORBIT(e, 8) - EORBIT(e, 9)) / 2;
-            EORBIT(e, 2) = (EORBIT(e, 2) - 2 * EORBIT(e, 5) - 2 * EORBIT(e, 6) - EORBIT(e, 9));
+            EORBIT(11) = C4[e];
+            EORBIT(10) = (EORBIT(10)- 2 * EORBIT(11)) / 2;
+            EORBIT(9) = (EORBIT(9) - 4 * EORBIT(11));
+            EORBIT(8) = (EORBIT(8) - EORBIT(9) - 4 * EORBIT(10) - 4 * EORBIT(11));
+            EORBIT(7) = (EORBIT(7) - EORBIT(9) - 2 * EORBIT(11));
+            EORBIT(6) = (EORBIT(6) - EORBIT(9)) / 2;
+            EORBIT(5) = (EORBIT(5) - EORBIT(9)) / 2;
+            EORBIT(4) = (EORBIT(4) - 2 * EORBIT(6) - EORBIT(8) - EORBIT(9)) / 2;
+            EORBIT(3) = (EORBIT(3) - 2 * EORBIT(5) - EORBIT(8) - EORBIT(9)) / 2;
+            EORBIT(2) = (EORBIT(2) - 2 * EORBIT(5) - 2 * EORBIT(6) - EORBIT(9));
         }
     }
     catch (char const *s) {
@@ -634,20 +634,20 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
             ncx = 0;
             
             // smaller graphlets
-            ORBIT(x, 0) = deg[x];
+            ORBIT(0) = deg[x];
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
                 int const &a = adj[x][nx1];
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &b = adj[x][nx2];
                     if (data.adjacent(a, b))
-                        ORBIT(x, 3)++;
+                        ORBIT(3)++;
                     else
-                        ORBIT(x, 2)++;
+                        ORBIT(2)++;
                 }
                 for (int na = 0; na < deg[a]; na++) {
                     int const &b = adj[a][na];
                     if (b != x && !data.adjacent(x, b)) {
-                        ORBIT(x, 1)++;
+                        ORBIT(1)++;
                         if (common_x[b] == 0)
                             common_x_list[ncx++] = b;
                         common_x[b]++;
@@ -694,7 +694,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if (!data.adjacent(a, c) || !data.adjacent(b, c))
                             continue;
-                        ORBIT(x, 14)++;
+                        ORBIT(14)++;
                         f_70 += common3_get(TRIPLE(a, b, c)) - 1;
                         f_71 += (tri[xa] > 2 && tri[xb] > 2) ? common3_get(TRIPLE(x, a, b)) - 1 : 0;
                         f_71 += (tri[xa] > 2 && tri[xc] > 2) ? common3_get(TRIPLE(x, a, c)) - 1 : 0;
@@ -717,7 +717,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if (!data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
-                        ORBIT(x, 13)++;
+                        ORBIT(13)++;
                         f_69 += (tri[xb] > 1 && tri[xc] > 1) ? common3_get(TRIPLE(x, b, c)) - 1 : 0;
                         f_68 += common3_get(TRIPLE(a, b, c)) - 1;
                         f_64 += common2_get(PAIR(b, c)) - 2;
@@ -740,7 +740,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[a][na].first, &ac = inc[a][na].second;
                         if ((c == x) || data.adjacent(x, c) || !data.adjacent(b, c))
                             continue;
-                        ORBIT(x, 12)++;
+                        ORBIT(12)++;
                         f_65 += (tri[ac] > 1) ? common3_get(TRIPLE(a, b, c)) : 0;
                         f_63 += common_x[c] - 2;
                         f_59 += tri[ac] - 1 + common2_get(PAIR(b, c)) - 1;
@@ -760,7 +760,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[a][na].first, &ac = inc[a][na].second;
                         if ((c == x) || data.adjacent(x, c) || !data.adjacent(b, c))
                             continue;
-                        ORBIT(x, 8)++;
+                        ORBIT(8)++;
                         f_62 += (tri[ac] > 0) ? common3_get(TRIPLE(a, b, c)) : 0;
                         f_53 += tri[xa] + tri[xb];
                         f_51 += tri[ac] + common2_get(PAIR(c, b));
@@ -781,7 +781,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if ((c == a) || (c==b) || data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
-                        ORBIT(x, 11)++;
+                        ORBIT(11)++;
                         f_44 += tri[xc];
                         f_33 += deg[x] - 3;
                         f_30 += deg[c] - 1;
@@ -798,7 +798,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
                         if ((c == x) || (c == a) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
-                        ORBIT(x, 10)++;
+                        ORBIT(10)++;
                         f_52 += common_a[c] - 1;
                         f_43 += tri[bc];
                         f_32 += deg[b] - 3;
@@ -816,7 +816,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[a][na2].first, &ac = inc[a][na2].second;
                         if ((c == x) || !data.adjacent(b, c) || data.adjacent(x, c))
                             continue;
-                        ORBIT(x, 9)++;
+                        ORBIT(9)++;
                         f_56 += (tri[ab] > 1 && tri[ac] > 1) ? common3_get(TRIPLE(a, b, c)) : 0;
                         f_45 += common2_get(PAIR(b, c)) - 1;
                         f_39 += tri[ab] - 1 + tri[ac] - 1;
@@ -835,7 +835,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
                         if ((c == a) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
-                        ORBIT(x, 4)++;
+                        ORBIT(4)++;
                         f_35 += common_a[c] - 1;
                         f_34 += common_x[c];
                         f_27 += tri[bc];
@@ -854,7 +854,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
                         if ((c == x) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
-                        ORBIT(x, 5)++;
+                        ORBIT(5)++;
                         f_17 += deg[a] - 1;
                     }
                 }
@@ -868,7 +868,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[a][na2].first, &ac = inc[a][na2].second;
                         if ((c == x) || data.adjacent(x,c) || data.adjacent(b,c))
                             continue;
-                        ORBIT(x, 6)++;
+                        ORBIT(6)++;
                         f_22 += deg[a] - 3;
                         f_20 += deg[x] - 1;
                         f_19 += deg[b] - 1 + deg[c] - 1;
@@ -884,7 +884,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
                         if (data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
-                        ORBIT(x, 7)++;
+                        ORBIT(7)++;
                         f_23 += deg[x] - 3;
                         f_21 += deg[a] - 1 + deg[b] - 1 + deg[c] - 1;
                     }
@@ -892,64 +892,64 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
             }
             
             // solve equations
-            ORBIT(x, 72) = C5[x];
-            ORBIT(x, 71) = (f_71 - 12 * ORBIT(x, 72)) / 2;
-            ORBIT(x, 70) = (f_70 - 4 * ORBIT(x, 72));
-            ORBIT(x, 69) = (f_69 - 2 * ORBIT(x, 71))/4;
-            ORBIT(x, 68) = (f_68 - 2 * ORBIT(x, 71));
-            ORBIT(x, 67) = (f_67 - 12 * ORBIT(x, 72) - 4 * ORBIT(x, 71));
-            ORBIT(x, 66) = (f_66 - 12 * ORBIT(x, 72) - 2 * ORBIT(x, 71) - 3 * ORBIT(x, 70));
-            ORBIT(x, 65) = (f_65 - 3 * ORBIT(x, 70)) / 2;
-            ORBIT(x, 64) = (f_64 - 2 * ORBIT(x, 71) - 4 * ORBIT(x, 69) - 1 * ORBIT(x, 68));
-            ORBIT(x, 63) = (f_63 - 3 * ORBIT(x, 70) - 2 * ORBIT(x, 68));
-            ORBIT(x, 62) = (f_62 - 1 * ORBIT(x, 68)) / 2;
-            ORBIT(x, 61) = (f_61 - 4 * ORBIT(x, 71) - 8 * ORBIT(x, 69) - 2 * ORBIT(x, 67)) / 2;
-            ORBIT(x, 60) = (f_60 - 4 * ORBIT(x, 71) - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 67));
-            ORBIT(x, 59) = (f_59 - 6 * ORBIT(x, 70) - 2 * ORBIT(x, 68) - 4 * ORBIT(x, 65));
-            ORBIT(x, 58) = (f_58 - 4 * ORBIT(x, 72) - 2 * ORBIT(x, 71) - 1 * ORBIT(x, 67));
-            ORBIT(x, 57) = (f_57 - 12 * ORBIT(x, 72) - 4 * ORBIT(x, 71) - 3 * ORBIT(x, 70) - 1 * ORBIT(x, 67) - 2 * ORBIT(x, 66));
-            ORBIT(x, 56) = (f_56 - 2 * ORBIT(x, 65)) / 3;
-            ORBIT(x, 55) = (f_55 - 2 * ORBIT(x, 71) - 2 * ORBIT(x, 67)) / 3;
-            ORBIT(x, 54) = (f_54 - 3 * ORBIT(x, 70) - 1 * ORBIT(x, 66) - 2 * ORBIT(x, 65)) / 2;
-            ORBIT(x, 53) = (f_53 - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 64) - 2 * ORBIT(x, 63));
-            ORBIT(x, 52) = (f_52 - 2 * ORBIT(x, 66) - 2 * ORBIT(x, 64) - 1 * ORBIT(x, 59)) / 2;
-            ORBIT(x, 51) = (f_51 - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 63) - 4 * ORBIT(x, 62));
-            ORBIT(x, 50) = (f_50 - 1 * ORBIT(x, 68) - 2 * ORBIT(x, 63)) / 3;
-            ORBIT(x, 49) = (f_49 - 1 * ORBIT(x, 68) - 1 * ORBIT(x, 64) - 2 * ORBIT(x, 62)) / 2;
-            ORBIT(x, 48) = (f_48 - 4 * ORBIT(x, 71) - 8 * ORBIT(x, 69) - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 67) - 2 * ORBIT(x, 64) - 2 * ORBIT(x, 61) - 1 * ORBIT(x, 60));
-            ORBIT(x, 47) = (f_47 - 3 * ORBIT(x, 70) - 2 * ORBIT(x, 68) - 1 * ORBIT(x, 66) - 1 * ORBIT(x, 63) - 1 * ORBIT(x, 60));
-            ORBIT(x, 46) = (f_46 - 3 * ORBIT(x, 70) - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 65) - 1 * ORBIT(x, 63) - 1 * ORBIT(x, 59));
-            ORBIT(x, 45) = (f_45 - 2 * ORBIT(x, 65) - 2 * ORBIT(x, 62) - 3 * ORBIT(x, 56));
-            ORBIT(x, 44) = (f_44 - 1 * ORBIT(x, 67) - 2 * ORBIT(x, 61))/4;
-            ORBIT(x, 43) = (f_43 - 2 * ORBIT(x, 66) - 1 * ORBIT(x, 60) - 1 * ORBIT(x, 59)) / 2;
-            ORBIT(x, 42) = (f_42 - 2 * ORBIT(x, 71) - 4 * ORBIT(x, 69) - 2 * ORBIT(x, 67) - 2 * ORBIT(x, 61) - 3 * ORBIT(x, 55));
-            ORBIT(x, 41) = (f_41 - 2 * ORBIT(x, 71) - 1 * ORBIT(x, 68) - 2 * ORBIT(x, 67) - 1 * ORBIT(x, 60) - 3 * ORBIT(x, 55));
-            ORBIT(x, 40) = (f_40 - 6 * ORBIT(x, 70) - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 66) - 4 * ORBIT(x, 65) - 1 * ORBIT(x, 60) - 1 * ORBIT(x, 59) - 4 * ORBIT(x, 54));
-            ORBIT(x, 39) = (f_39 - 4 * ORBIT(x, 65) - 1 * ORBIT(x, 59) - 6 * ORBIT(x, 56)) / 2;
-            ORBIT(x, 38) = (f_38 - 1 * ORBIT(x, 68) - 1 * ORBIT(x, 64) - 2 * ORBIT(x, 63) - 1 * ORBIT(x, 53) - 3 * ORBIT(x, 50));
-            ORBIT(x, 37) = (f_37 - 2 * ORBIT(x, 68) - 2 * ORBIT(x, 64) - 2 * ORBIT(x, 63) - 4 * ORBIT(x, 62) - 1 * ORBIT(x, 53) - 1 * ORBIT(x, 51) - 4 * ORBIT(x, 49));
-            ORBIT(x, 36) = (f_36 - 1 * ORBIT(x, 68) - 2 * ORBIT(x, 63) - 2 * ORBIT(x, 62) - 1 * ORBIT(x, 51) - 3 * ORBIT(x, 50));
-            ORBIT(x, 35) = (f_35 - 1 * ORBIT(x, 59) - 2 * ORBIT(x, 52) - 2 * ORBIT(x, 45)) / 2;
-            ORBIT(x, 34) = (f_34 - 1 * ORBIT(x, 59) - 2 * ORBIT(x, 52) - 1 * ORBIT(x, 51)) / 2;
-            ORBIT(x, 33) = (f_33 - 1 * ORBIT(x, 67) - 2 * ORBIT(x, 61) - 3 * ORBIT(x, 58) - 4 * ORBIT(x, 44) - 2 * ORBIT(x, 42)) / 2;
-            ORBIT(x, 32) = (f_32 - 2 * ORBIT(x, 66) - 1 * ORBIT(x, 60) - 1 * ORBIT(x, 59) - 2 * ORBIT(x, 57) - 2 * ORBIT(x, 43) - 2 * ORBIT(x, 41) - 1 * ORBIT(x, 40)) / 2;
-            ORBIT(x, 31) = (f_31 - 2 * ORBIT(x, 65) - 1 * ORBIT(x, 59) - 3 * ORBIT(x, 56) - 1 * ORBIT(x, 43) - 2 * ORBIT(x, 39));
-            ORBIT(x, 30) = (f_30 - 1 * ORBIT(x, 67) - 1 * ORBIT(x, 63) - 2 * ORBIT(x, 61) - 1 * ORBIT(x, 53) - 4 * ORBIT(x, 44));
-            ORBIT(x, 29) = (f_29 - 2 * ORBIT(x, 66) - 2 * ORBIT(x, 64) - 1 * ORBIT(x, 60) - 1 * ORBIT(x, 59) - 1 * ORBIT(x, 53) - 2 * ORBIT(x, 52) - 2 * ORBIT(x, 43));
-            ORBIT(x, 28) = (f_28 - 2 * ORBIT(x, 65) - 2 * ORBIT(x, 62) - 1 * ORBIT(x, 59) - 1 * ORBIT(x, 51) - 1 * ORBIT(x, 43));
-            ORBIT(x, 27) = (f_27 - 1 * ORBIT(x, 59) - 1 * ORBIT(x, 51) - 2 * ORBIT(x, 45)) / 2;
-            ORBIT(x, 26) = (f_26 - 2 * ORBIT(x, 67) - 2 * ORBIT(x, 63) - 2 * ORBIT(x, 61) - 6 * ORBIT(x, 58) - 1 * ORBIT(x, 53) - 2 * ORBIT(x, 47) - 2 * ORBIT(x, 42));
-            ORBIT(x, 25) = (f_25 - 2 * ORBIT(x, 66) - 2 * ORBIT(x, 64) - 1 * ORBIT(x, 59) - 2 * ORBIT(x, 57) - 2 * ORBIT(x, 52) - 1 * ORBIT(x, 48) - 1 * ORBIT(x, 40)) / 2;
-            ORBIT(x, 24) = (f_24 - 4 * ORBIT(x, 65) - 4 * ORBIT(x, 62) - 1 * ORBIT(x, 59) - 6 * ORBIT(x, 56) - 1 * ORBIT(x, 51) - 2 * ORBIT(x, 45) - 2 * ORBIT(x, 39));
-            ORBIT(x, 23) = (f_23 - 1 * ORBIT(x, 55) - 1 * ORBIT(x, 42) - 2 * ORBIT(x, 33))/4;
-            ORBIT(x, 22) = (f_22 - 2 * ORBIT(x, 54) - 1 * ORBIT(x, 40) - 1 * ORBIT(x, 39) - 1 * ORBIT(x, 32) - 2 * ORBIT(x, 31)) / 3;
-            ORBIT(x, 21) = (f_21 - 3 * ORBIT(x, 55) - 3 * ORBIT(x, 50) - 2 * ORBIT(x, 42) - 2 * ORBIT(x, 38) - 2 * ORBIT(x, 33));
-            ORBIT(x, 20) = (f_20 - 2 * ORBIT(x, 54) - 2 * ORBIT(x, 49) - 1 * ORBIT(x, 40) - 1 * ORBIT(x, 37) - 1 * ORBIT(x, 32));
-            ORBIT(x, 19) = (f_19 - 4 * ORBIT(x, 54) - 4 * ORBIT(x, 49) - 1 * ORBIT(x, 40) - 2 * ORBIT(x, 39) - 1 * ORBIT(x, 37) - 2 * ORBIT(x, 35) - 2 * ORBIT(x, 31));
-            ORBIT(x, 18) = (f_18 - 1 * ORBIT(x, 59) - 1 * ORBIT(x, 51) - 2 * ORBIT(x, 46) - 2 * ORBIT(x, 45) - 2 * ORBIT(x, 36) - 2 * ORBIT(x, 27) - 1 * ORBIT(x, 24)) / 2;
-            ORBIT(x, 17) = (f_17 - 1 * ORBIT(x, 60) - 1 * ORBIT(x, 53) - 1 * ORBIT(x, 51) - 1 * ORBIT(x, 48) - 1 * ORBIT(x, 37) - 2 * ORBIT(x, 34) - 2 * ORBIT(x, 30)) / 2;
-            ORBIT(x, 16) = (f_16 - 1 * ORBIT(x, 59) - 2 * ORBIT(x, 52) - 1 * ORBIT(x, 51) - 2 * ORBIT(x, 46) - 2 * ORBIT(x, 36) - 2 * ORBIT(x, 34) - 1 * ORBIT(x, 29));
-            ORBIT(x, 15) = (f_15 - 1 * ORBIT(x, 59) - 2 * ORBIT(x, 52) - 1 * ORBIT(x, 51) - 2 * ORBIT(x, 45) - 2 * ORBIT(x, 35) - 2 * ORBIT(x, 34) - 2 * ORBIT(x, 27));
+            ORBIT(72) = C5[x];
+            ORBIT(71) = (f_71 - 12 * ORBIT(72)) / 2;
+            ORBIT(70) = (f_70 - 4 * ORBIT(72));
+            ORBIT(69) = (f_69 - 2 * ORBIT(71))/4;
+            ORBIT(68) = (f_68 - 2 * ORBIT(71));
+            ORBIT(67) = (f_67 - 12 * ORBIT(72) - 4 * ORBIT(71));
+            ORBIT(66) = (f_66 - 12 * ORBIT(72) - 2 * ORBIT(71) - 3 * ORBIT(70));
+            ORBIT(65) = (f_65 - 3 * ORBIT(70)) / 2;
+            ORBIT(64) = (f_64 - 2 * ORBIT(71) - 4 * ORBIT(69) - 1 * ORBIT(68));
+            ORBIT(63) = (f_63 - 3 * ORBIT(70) - 2 * ORBIT(68));
+            ORBIT(62) = (f_62 - 1 * ORBIT(68)) / 2;
+            ORBIT(61) = (f_61 - 4 * ORBIT(71) - 8 * ORBIT(69) - 2 * ORBIT(67)) / 2;
+            ORBIT(60) = (f_60 - 4 * ORBIT(71) - 2 * ORBIT(68) - 2 * ORBIT(67));
+            ORBIT(59) = (f_59 - 6 * ORBIT(70) - 2 * ORBIT(68) - 4 * ORBIT(65));
+            ORBIT(58) = (f_58 - 4 * ORBIT(72) - 2 * ORBIT(71) - 1 * ORBIT(67));
+            ORBIT(57) = (f_57 - 12 * ORBIT(72) - 4 * ORBIT(71) - 3 * ORBIT(70) - 1 * ORBIT(67) - 2 * ORBIT(66));
+            ORBIT(56) = (f_56 - 2 * ORBIT(65)) / 3;
+            ORBIT(55) = (f_55 - 2 * ORBIT(71) - 2 * ORBIT(67)) / 3;
+            ORBIT(54) = (f_54 - 3 * ORBIT(70) - 1 * ORBIT(66) - 2 * ORBIT(65)) / 2;
+            ORBIT(53) = (f_53 - 2 * ORBIT(68) - 2 * ORBIT(64) - 2 * ORBIT(63));
+            ORBIT(52) = (f_52 - 2 * ORBIT(66) - 2 * ORBIT(64) - 1 * ORBIT(59)) / 2;
+            ORBIT(51) = (f_51 - 2 * ORBIT(68) - 2 * ORBIT(63) - 4 * ORBIT(62));
+            ORBIT(50) = (f_50 - 1 * ORBIT(68) - 2 * ORBIT(63)) / 3;
+            ORBIT(49) = (f_49 - 1 * ORBIT(68) - 1 * ORBIT(64) - 2 * ORBIT(62)) / 2;
+            ORBIT(48) = (f_48 - 4 * ORBIT(71) - 8 * ORBIT(69) - 2 * ORBIT(68) - 2 * ORBIT(67) - 2 * ORBIT(64) - 2 * ORBIT(61) - 1 * ORBIT(60));
+            ORBIT(47) = (f_47 - 3 * ORBIT(70) - 2 * ORBIT(68) - 1 * ORBIT(66) - 1 * ORBIT(63) - 1 * ORBIT(60));
+            ORBIT(46) = (f_46 - 3 * ORBIT(70) - 2 * ORBIT(68) - 2 * ORBIT(65) - 1 * ORBIT(63) - 1 * ORBIT(59));
+            ORBIT(45) = (f_45 - 2 * ORBIT(65) - 2 * ORBIT(62) - 3 * ORBIT(56));
+            ORBIT(44) = (f_44 - 1 * ORBIT(67) - 2 * ORBIT(61))/4;
+            ORBIT(43) = (f_43 - 2 * ORBIT(66) - 1 * ORBIT(60) - 1 * ORBIT(59)) / 2;
+            ORBIT(42) = (f_42 - 2 * ORBIT(71) - 4 * ORBIT(69) - 2 * ORBIT(67) - 2 * ORBIT(61) - 3 * ORBIT(55));
+            ORBIT(41) = (f_41 - 2 * ORBIT(71) - 1 * ORBIT(68) - 2 * ORBIT(67) - 1 * ORBIT(60) - 3 * ORBIT(55));
+            ORBIT(40) = (f_40 - 6 * ORBIT(70) - 2 * ORBIT(68) - 2 * ORBIT(66) - 4 * ORBIT(65) - 1 * ORBIT(60) - 1 * ORBIT(59) - 4 * ORBIT(54));
+            ORBIT(39) = (f_39 - 4 * ORBIT(65) - 1 * ORBIT(59) - 6 * ORBIT(56)) / 2;
+            ORBIT(38) = (f_38 - 1 * ORBIT(68) - 1 * ORBIT(64) - 2 * ORBIT(63) - 1 * ORBIT(53) - 3 * ORBIT(50));
+            ORBIT(37) = (f_37 - 2 * ORBIT(68) - 2 * ORBIT(64) - 2 * ORBIT(63) - 4 * ORBIT(62) - 1 * ORBIT(53) - 1 * ORBIT(51) - 4 * ORBIT(49));
+            ORBIT(36) = (f_36 - 1 * ORBIT(68) - 2 * ORBIT(63) - 2 * ORBIT(62) - 1 * ORBIT(51) - 3 * ORBIT(50));
+            ORBIT(35) = (f_35 - 1 * ORBIT(59) - 2 * ORBIT(52) - 2 * ORBIT(45)) / 2;
+            ORBIT(34) = (f_34 - 1 * ORBIT(59) - 2 * ORBIT(52) - 1 * ORBIT(51)) / 2;
+            ORBIT(33) = (f_33 - 1 * ORBIT(67) - 2 * ORBIT(61) - 3 * ORBIT(58) - 4 * ORBIT(44) - 2 * ORBIT(42)) / 2;
+            ORBIT(32) = (f_32 - 2 * ORBIT(66) - 1 * ORBIT(60) - 1 * ORBIT(59) - 2 * ORBIT(57) - 2 * ORBIT(43) - 2 * ORBIT(41) - 1 * ORBIT(40)) / 2;
+            ORBIT(31) = (f_31 - 2 * ORBIT(65) - 1 * ORBIT(59) - 3 * ORBIT(56) - 1 * ORBIT(43) - 2 * ORBIT(39));
+            ORBIT(30) = (f_30 - 1 * ORBIT(67) - 1 * ORBIT(63) - 2 * ORBIT(61) - 1 * ORBIT(53) - 4 * ORBIT(44));
+            ORBIT(29) = (f_29 - 2 * ORBIT(66) - 2 * ORBIT(64) - 1 * ORBIT(60) - 1 * ORBIT(59) - 1 * ORBIT(53) - 2 * ORBIT(52) - 2 * ORBIT(43));
+            ORBIT(28) = (f_28 - 2 * ORBIT(65) - 2 * ORBIT(62) - 1 * ORBIT(59) - 1 * ORBIT(51) - 1 * ORBIT(43));
+            ORBIT(27) = (f_27 - 1 * ORBIT(59) - 1 * ORBIT(51) - 2 * ORBIT(45)) / 2;
+            ORBIT(26) = (f_26 - 2 * ORBIT(67) - 2 * ORBIT(63) - 2 * ORBIT(61) - 6 * ORBIT(58) - 1 * ORBIT(53) - 2 * ORBIT(47) - 2 * ORBIT(42));
+            ORBIT(25) = (f_25 - 2 * ORBIT(66) - 2 * ORBIT(64) - 1 * ORBIT(59) - 2 * ORBIT(57) - 2 * ORBIT(52) - 1 * ORBIT(48) - 1 * ORBIT(40)) / 2;
+            ORBIT(24) = (f_24 - 4 * ORBIT(65) - 4 * ORBIT(62) - 1 * ORBIT(59) - 6 * ORBIT(56) - 1 * ORBIT(51) - 2 * ORBIT(45) - 2 * ORBIT(39));
+            ORBIT(23) = (f_23 - 1 * ORBIT(55) - 1 * ORBIT(42) - 2 * ORBIT(33))/4;
+            ORBIT(22) = (f_22 - 2 * ORBIT(54) - 1 * ORBIT(40) - 1 * ORBIT(39) - 1 * ORBIT(32) - 2 * ORBIT(31)) / 3;
+            ORBIT(21) = (f_21 - 3 * ORBIT(55) - 3 * ORBIT(50) - 2 * ORBIT(42) - 2 * ORBIT(38) - 2 * ORBIT(33));
+            ORBIT(20) = (f_20 - 2 * ORBIT(54) - 2 * ORBIT(49) - 1 * ORBIT(40) - 1 * ORBIT(37) - 1 * ORBIT(32));
+            ORBIT(19) = (f_19 - 4 * ORBIT(54) - 4 * ORBIT(49) - 1 * ORBIT(40) - 2 * ORBIT(39) - 1 * ORBIT(37) - 2 * ORBIT(35) - 2 * ORBIT(31));
+            ORBIT(18) = (f_18 - 1 * ORBIT(59) - 1 * ORBIT(51) - 2 * ORBIT(46) - 2 * ORBIT(45) - 2 * ORBIT(36) - 2 * ORBIT(27) - 1 * ORBIT(24)) / 2;
+            ORBIT(17) = (f_17 - 1 * ORBIT(60) - 1 * ORBIT(53) - 1 * ORBIT(51) - 1 * ORBIT(48) - 1 * ORBIT(37) - 2 * ORBIT(34) - 2 * ORBIT(30)) / 2;
+            ORBIT(16) = (f_16 - 1 * ORBIT(59) - 2 * ORBIT(52) - 1 * ORBIT(51) - 2 * ORBIT(46) - 2 * ORBIT(36) - 2 * ORBIT(34) - 1 * ORBIT(29));
+            ORBIT(15) = (f_15 - 1 * ORBIT(59) - 2 * ORBIT(52) - 1 * ORBIT(51) - 2 * ORBIT(45) - 2 * ORBIT(35) - 2 * ORBIT(34) - 2 * ORBIT(27));
         }
     }
     catch (char const *s) {
@@ -1106,16 +1106,16 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                     if (z == y)
                         continue;
                     if (data.adjacent(y, z))
-                        EORBIT(e, 1)++;
+                        EORBIT(1)++;
                     else
-                        EORBIT(e, 0)++;
+                        EORBIT(0)++;
                 }
                 for (int ny = 0;ny < deg[y]; ny++) {
                     int const &z = adj[y][ny];
                     if (z == x)
                         continue;
                     if (!data.adjacent(x, z))
-                        EORBIT(e, 0)++;
+                        EORBIT(0)++;
                 }
                 
                 // edge-orbit 11 = (14,14)
@@ -1128,7 +1128,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         if (b == y || !data.adjacent(y, b) || !data.adjacent(a, b))
                             continue;
                         int const &ya = data.getEdgeId(y,a), &yb = data.getEdgeId(y,b), &ab = data.getEdgeId(a,b);
-                        EORBIT(e, 11)++;
+                        EORBIT(11)++;
                         f_66 += common3_get(TRIPLE(x, y, a)) - 1;
                         f_66 += common3_get(TRIPLE(x, y, b)) - 1;
                         f_65 += common3_get(TRIPLE(a, b, x)) - 1;
@@ -1151,7 +1151,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         if (b == y || !data.adjacent(y, b) || data.adjacent(a, b))
                             continue;
                         int const &ya = data.getEdgeId(y, a), &yb = data.getEdgeId(y, b);
-                        EORBIT(e, 10)++;
+                        EORBIT(10)++;
                         f_64 += common3_get(TRIPLE(a, b, x)) - 1;
                         f_64 += common3_get(TRIPLE(a, b, y)) - 1;
                         f_58 += common2_get(PAIR(a, b)) - 2;
@@ -1175,7 +1175,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         if (adj_ya + adj_xb != 1)
                             continue;
                         int ab = data.getEdgeId(a,b);
-                        EORBIT(e, 9)++;
+                        EORBIT(9)++;
                         if (adj_xb) {
                             int const &xb = data.getEdgeId(x, b);
                             f_63 += common3_get(TRIPLE(a, b, y)) - 1;
@@ -1214,13 +1214,13 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[x][nx1];
                         if (b == y || b == a || data.adjacent(y, b) || data.adjacent(a, b))
                             continue;
-                        EORBIT(e, 8)++;
+                        EORBIT(8)++;
                     }
                     for (int ny1 = 0; ny1 < deg[y]; ny1++) {
                         int const &b = adj[y][ny1];
                         if (b == x || b == a || data.adjacent(x, b) || data.adjacent(a, b))
                             continue;
-                        EORBIT(e, 8)++;
+                        EORBIT(8)++;
                     }
                 }
                 
@@ -1233,7 +1233,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[a][na], &ab = inc[a][na].second;
                         if (b == x || b == y || data.adjacent(x, b) || data.adjacent(y, b))
                             continue;
-                        EORBIT(e, 7)++;
+                        EORBIT(7)++;
                         f_45 += common_x[b] - 1;
                         f_45 += common_y[b] - 1;
                         f_36 += tri[ab];
@@ -1253,7 +1253,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         if (b == x || data.adjacent(x, b) || !data.adjacent(a,b))
                             continue;
                         int const &ab = data.getEdgeId(a, b);
-                        EORBIT(e, 6)++;
+                        EORBIT(6)++;
                         f_49 += common3_get(TRIPLE(y, a, b));
                         f_38 += tri[ab] - 1;
                         f_37 += tri[xy];
@@ -1272,7 +1272,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         if (b == y || data.adjacent(y, b) || !data.adjacent(a, b))
                             continue;
                         int const &ab = data.getEdgeId(a, b);
-                        EORBIT(e, 6)++;
+                        EORBIT(6)++;
                         f_49 += common3_get(TRIPLE(x, a, b));
                         f_38 += tri[ab] - 1;
                         f_37 += tri[xy];
@@ -1293,7 +1293,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         if (b == x || data.adjacent(x, b) || !data.adjacent(a, b))
                             continue;
                         int const &ab = data.getEdgeId(a, b);
-                        EORBIT(e, 5)++;
+                        EORBIT(5)++;
                         f_56 += common3_get(TRIPLE(x, a, b));
                         f_56 += common3_get(TRIPLE(y, a, b));
                         f_46 += tri[xy];
@@ -1315,7 +1315,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[y][ny2];
                         if (b == x || data.adjacent(x, b) || data.adjacent(a, b))
                             continue;
-                        EORBIT(e, 4)++;
+                        EORBIT(4)++;
                         f_27 += tri[xy];
                         f_17 += deg[y] - 3;
                         f_15 += (deg[a] - 1) + (deg[b] - 1);
@@ -1329,7 +1329,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[x][nx2];
                         if (b == y || data.adjacent(y,b) || data.adjacent(a,b))
                             continue;
-                        EORBIT(e, 4)++;
+                        EORBIT(4)++;
                         f_27 += tri[xy];
                         f_17 += deg[x] - 3;
                         f_15 += (deg[a] - 1) + (deg[b] - 1);
@@ -1345,7 +1345,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[y][ny];
                         if (b == x || data.adjacent(x,b) || data.adjacent(a,b))
                             continue;
-                        EORBIT(e, 3)++;
+                        EORBIT(3)++;
                         f_20 += tri[xy];
                         f_16 += (deg[x] - 2) + (deg[y] - 2);
                         f_13 += (deg[a] - 1) + (deg[b] - 1);
@@ -1361,7 +1361,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[a][na], &ab = inc[a][na].second;
                         if (b == y || data.adjacent(y,b) || data.adjacent(x,b))
                             continue;
-                        EORBIT(e, 2)++;
+                        EORBIT(2)++;
                         f_29 += common_y[b] - 1;
                         f_28 += common_x[b];
                         f_24 += tri[xy];
@@ -1378,7 +1378,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                         int const &b = adj[a][na], &ab = inc[a][na].second;
                         if (b == x || data.adjacent(x, b) || data.adjacent(y, b))
                             continue;
-                        EORBIT(e, 2)++;
+                        EORBIT(2)++;
                         f_29 += common_x[b] - 1;
                         f_28 += common_y[b];
                         f_24 += tri[xy];
@@ -1389,62 +1389,62 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
                 }
                 
                 // solve system of equations
-                EORBIT(e, 67) = C5[e];
-                EORBIT(e, 66) = (f_66 - 6 * EORBIT(e, 67)) / 2;
-                EORBIT(e, 65) = (f_65 - 6 * EORBIT(e, 67));
-                EORBIT(e, 64) = (f_64 - 2 * EORBIT(e, 66));
-                EORBIT(e, 63) = (f_63 - 2 * EORBIT(e, 65)) / 2;
-                EORBIT(e, 62) = (f_62 - 2 * EORBIT(e, 66) - 3 * EORBIT(e, 67));
-                EORBIT(e, 61) = (f_61 - 2 * EORBIT(e, 65) - 4 * EORBIT(e, 66) - 12 * EORBIT(e, 67));
-                EORBIT(e, 60) = (f_60 - 1 * EORBIT(e, 65) - 3 * EORBIT(e, 67));
-                EORBIT(e, 59) = (f_59 - 2 * EORBIT(e, 65)) / 2;
-                EORBIT(e, 58) = (f_58 - 1 * EORBIT(e, 64) - 1 * EORBIT(e, 66));
-                EORBIT(e, 57) = (f_57 - 2 * EORBIT(e, 63) - 2 * EORBIT(e, 64) - 2 * EORBIT(e, 65));
-                EORBIT(e, 56) = (f_56 - 2 * EORBIT(e, 63)) / 2;
-                EORBIT(e, 55) = (f_55 - 4 * EORBIT(e, 62) - 2 * EORBIT(e, 64) - 4 * EORBIT(e, 66));
-                EORBIT(e, 54) = (f_54 - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 63) - 2 * EORBIT(e, 65)) / 2;
-                EORBIT(e, 53) = (f_53 - 2 * EORBIT(e, 59) - 2 * EORBIT(e, 64) - 2 * EORBIT(e, 65));
-                EORBIT(e, 52) = (f_52 - 2 * EORBIT(e, 59) - 2 * EORBIT(e, 63) - 2 * EORBIT(e, 65));
-                EORBIT(e, 51) = (f_51 - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 62) - 1 * EORBIT(e, 65) - 4 * EORBIT(e, 66) - 6 * EORBIT(e, 67));
-                EORBIT(e, 50) = (f_50 - 2 * EORBIT(e, 60) - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 65) - 2 * EORBIT(e, 66) - 6 * EORBIT(e, 67));
-                EORBIT(e, 49) = (f_49 - 1 * EORBIT(e, 59)) / 3;
-                EORBIT(e, 48) = (f_48 - 2 * EORBIT(e, 62) - 1 * EORBIT(e, 66)) / 3;
-                EORBIT(e, 47) = (f_47 - 2 * EORBIT(e, 59) - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 65)) / 2;
-                EORBIT(e, 46) = (f_46 - 1 * EORBIT(e, 57) - 1 * EORBIT(e, 63));
-                EORBIT(e, 45) = (f_45 - 1 * EORBIT(e, 52) - 4 * EORBIT(e, 58) - 4 * EORBIT(e, 60));
-                EORBIT(e, 44) = (f_44 - 2 * EORBIT(e, 56) - 1 * EORBIT(e, 57) - 2 * EORBIT(e, 63));
-                EORBIT(e, 43) = (f_43 - 2 * EORBIT(e, 56) - 1 * EORBIT(e, 63));
-                EORBIT(e, 42) = (f_42 - 2 * EORBIT(e, 56) - 1 * EORBIT(e, 57) - 2 * EORBIT(e, 63)) / 2;
-                EORBIT(e, 41) = (f_41 - 1 * EORBIT(e, 55) - 2 * EORBIT(e, 58) - 2 * EORBIT(e, 62) - 2 * EORBIT(e, 64) - 2 * EORBIT(e, 66));
-                EORBIT(e, 40) = (f_40 - 2 * EORBIT(e, 54) - 1 * EORBIT(e, 55) - 1 * EORBIT(e, 57) - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 63) - 2 * EORBIT(e, 64) - 2 * EORBIT(e, 65));
-                EORBIT(e, 39) = (f_39 - 1 * EORBIT(e, 52) - 1 * EORBIT(e, 53) - 1 * EORBIT(e, 57) - 2 * EORBIT(e, 59) - 2 * EORBIT(e, 63) - 2 * EORBIT(e, 64) - 2 * EORBIT(e, 65));
-                EORBIT(e, 38) = (f_38 - 3 * EORBIT(e, 49) - 1 * EORBIT(e, 56) - 1 * EORBIT(e, 59));
-                EORBIT(e, 37) = (f_37 - 1 * EORBIT(e, 53) - 1 * EORBIT(e, 59));
-                EORBIT(e, 36) = (f_36 - 1 * EORBIT(e, 52) - 2 * EORBIT(e, 60)) / 2;
-                EORBIT(e, 35) = (f_35 - 6 * EORBIT(e, 48) - 1 * EORBIT(e, 55) - 4 * EORBIT(e, 62) - 1 * EORBIT(e, 64) - 2 * EORBIT(e, 66));
-                EORBIT(e, 34) = (f_34 - 2 * EORBIT(e, 47) - 1 * EORBIT(e, 53) - 1 * EORBIT(e, 55) - 2 * EORBIT(e, 59) - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 64) - 2 * EORBIT(e, 65));
-                EORBIT(e, 33) = (f_33 - 2 * EORBIT(e, 47) - 1 * EORBIT(e, 52) - 2 * EORBIT(e, 54) - 2 * EORBIT(e, 59) - 1 * EORBIT(e, 61) - 2 * EORBIT(e, 63) - 2 * EORBIT(e, 65));
-                EORBIT(e, 32) = (f_32 - 6 * EORBIT(e, 49) - 1 * EORBIT(e, 53) - 2 * EORBIT(e, 59)) / 2;
-                EORBIT(e, 31) = (f_31 - 2 * EORBIT(e, 42) - 1 * EORBIT(e, 44) - 2 * EORBIT(e, 46) - 2 * EORBIT(e, 56) - 2 * EORBIT(e, 57) - 2 * EORBIT(e, 63));
-                EORBIT(e, 30) = (f_30 - 2 * EORBIT(e, 42) - 2 * EORBIT(e, 43) - 1 * EORBIT(e, 44) - 4 * EORBIT(e, 56) - 1 * EORBIT(e, 57) - 2 * EORBIT(e, 63));
-                EORBIT(e, 29) = (f_29 - 2 * EORBIT(e, 38) - 1 * EORBIT(e, 45) - 1 * EORBIT(e, 52)) / 2;
-                EORBIT(e, 28) = (f_28 - 2 * EORBIT(e, 43) - 1 * EORBIT(e, 45) - 1 * EORBIT(e, 52)) / 2;
-                EORBIT(e, 27) = (f_27 - 1 * EORBIT(e, 34) - 1 * EORBIT(e, 47));
-                EORBIT(e, 26) = (f_26 - 1 * EORBIT(e, 33) - 2 * EORBIT(e, 36) - 1 * EORBIT(e, 50) - 1 * EORBIT(e, 52) - 2 * EORBIT(e, 60)) / 2;
-                EORBIT(e, 25) = (f_25 - 2 * EORBIT(e, 32) - 1 * EORBIT(e, 37) - 3 * EORBIT(e, 49) - 1 * EORBIT(e, 53) - 1 * EORBIT(e, 59));
-                EORBIT(e, 24) = (f_24 - 1 * EORBIT(e, 39) - 1 * EORBIT(e, 45) - 1 * EORBIT(e, 52));
-                EORBIT(e, 23) = (f_23 - 2 * EORBIT(e, 36) - 1 * EORBIT(e, 45) - 1 * EORBIT(e, 52) - 2 * EORBIT(e, 58) - 2 * EORBIT(e, 60));
-                EORBIT(e, 22) = (f_22 - 1 * EORBIT(e, 37) - 1 * EORBIT(e, 44) - 1 * EORBIT(e, 53) - 1 * EORBIT(e, 56) - 1 * EORBIT(e, 59));
-                EORBIT(e, 21) = (f_21 - 2 * EORBIT(e, 38) - 2 * EORBIT(e, 43) - 1 * EORBIT(e, 52)) / 2;
-                EORBIT(e, 20) = (f_20 - 1 * EORBIT(e, 40) - 1 * EORBIT(e, 54));
-                EORBIT(e, 19) = (f_19 - 1 * EORBIT(e, 33) - 2 * EORBIT(e, 41) - 1 * EORBIT(e, 45) - 2 * EORBIT(e, 50) - 1 * EORBIT(e, 52) - 4 * EORBIT(e, 58) - 4 * EORBIT(e, 60));
-                EORBIT(e, 18) = (f_18 - 2 * EORBIT(e, 32) - 2 * EORBIT(e, 38) - 1 * EORBIT(e, 44) - 6 * EORBIT(e, 49) - 1 * EORBIT(e, 53) - 2 * EORBIT(e, 56) - 2 * EORBIT(e, 59));
-                EORBIT(e, 17) = (f_17 - 2 * EORBIT(e, 25) - 1 * EORBIT(e, 27) - 1 * EORBIT(e, 32) - 1 * EORBIT(e, 34) - 1 * EORBIT(e, 47)) / 3;
-                EORBIT(e, 16) = (f_16 - 2 * EORBIT(e, 20) - 2 * EORBIT(e, 22) - 1 * EORBIT(e, 31) - 2 * EORBIT(e, 40) - 1 * EORBIT(e, 44) - 2 * EORBIT(e, 54)) / 2;
-                EORBIT(e, 15) = (f_15 - 2 * EORBIT(e, 25) - 2 * EORBIT(e, 29) - 1 * EORBIT(e, 31) - 2 * EORBIT(e, 32) - 1 * EORBIT(e, 34) - 2 * EORBIT(e, 42) - 2 * EORBIT(e, 47));
-                EORBIT(e, 14) = (f_14 - 1 * EORBIT(e, 18) - 2 * EORBIT(e, 21) - 1 * EORBIT(e, 30) - 2 * EORBIT(e, 38) - 1 * EORBIT(e, 39) - 2 * EORBIT(e, 43) - 1 * EORBIT(e, 52)) / 2;
-                EORBIT(e, 13) = (f_13 - 2 * EORBIT(e, 22) - 2 * EORBIT(e, 28) - 1 * EORBIT(e, 31) - 1 * EORBIT(e, 40) - 2 * EORBIT(e, 44) - 2 * EORBIT(e, 54));
-                EORBIT(e, 12) = (f_12 - 2 * EORBIT(e, 21) - 2 * EORBIT(e, 28) - 2 * EORBIT(e, 29) - 2 * EORBIT(e, 38) - 2 * EORBIT(e, 43) - 1 * EORBIT(e, 45) - 1 * EORBIT(e, 52));
+                EORBIT(67) = C5[e];
+                EORBIT(66) = (f_66 - 6 * EORBIT(67)) / 2;
+                EORBIT(65) = (f_65 - 6 * EORBIT(67));
+                EORBIT(64) = (f_64 - 2 * EORBIT(66));
+                EORBIT(63) = (f_63 - 2 * EORBIT(65)) / 2;
+                EORBIT(62) = (f_62 - 2 * EORBIT(66) - 3 * EORBIT(67));
+                EORBIT(61) = (f_61 - 2 * EORBIT(65) - 4 * EORBIT(66) - 12 * EORBIT(67));
+                EORBIT(60) = (f_60 - 1 * EORBIT(65) - 3 * EORBIT(67));
+                EORBIT(59) = (f_59 - 2 * EORBIT(65)) / 2;
+                EORBIT(58) = (f_58 - 1 * EORBIT(64) - 1 * EORBIT(66));
+                EORBIT(57) = (f_57 - 2 * EORBIT(63) - 2 * EORBIT(64) - 2 * EORBIT(65));
+                EORBIT(56) = (f_56 - 2 * EORBIT(63)) / 2;
+                EORBIT(55) = (f_55 - 4 * EORBIT(62) - 2 * EORBIT(64) - 4 * EORBIT(66));
+                EORBIT(54) = (f_54 - 1 * EORBIT(61) - 2 * EORBIT(63) - 2 * EORBIT(65)) / 2;
+                EORBIT(53) = (f_53 - 2 * EORBIT(59) - 2 * EORBIT(64) - 2 * EORBIT(65));
+                EORBIT(52) = (f_52 - 2 * EORBIT(59) - 2 * EORBIT(63) - 2 * EORBIT(65));
+                EORBIT(51) = (f_51 - 1 * EORBIT(61) - 2 * EORBIT(62) - 1 * EORBIT(65) - 4 * EORBIT(66) - 6 * EORBIT(67));
+                EORBIT(50) = (f_50 - 2 * EORBIT(60) - 1 * EORBIT(61) - 2 * EORBIT(65) - 2 * EORBIT(66) - 6 * EORBIT(67));
+                EORBIT(49) = (f_49 - 1 * EORBIT(59)) / 3;
+                EORBIT(48) = (f_48 - 2 * EORBIT(62) - 1 * EORBIT(66)) / 3;
+                EORBIT(47) = (f_47 - 2 * EORBIT(59) - 1 * EORBIT(61) - 2 * EORBIT(65)) / 2;
+                EORBIT(46) = (f_46 - 1 * EORBIT(57) - 1 * EORBIT(63));
+                EORBIT(45) = (f_45 - 1 * EORBIT(52) - 4 * EORBIT(58) - 4 * EORBIT(60));
+                EORBIT(44) = (f_44 - 2 * EORBIT(56) - 1 * EORBIT(57) - 2 * EORBIT(63));
+                EORBIT(43) = (f_43 - 2 * EORBIT(56) - 1 * EORBIT(63));
+                EORBIT(42) = (f_42 - 2 * EORBIT(56) - 1 * EORBIT(57) - 2 * EORBIT(63)) / 2;
+                EORBIT(41) = (f_41 - 1 * EORBIT(55) - 2 * EORBIT(58) - 2 * EORBIT(62) - 2 * EORBIT(64) - 2 * EORBIT(66));
+                EORBIT(40) = (f_40 - 2 * EORBIT(54) - 1 * EORBIT(55) - 1 * EORBIT(57) - 1 * EORBIT(61) - 2 * EORBIT(63) - 2 * EORBIT(64) - 2 * EORBIT(65));
+                EORBIT(39) = (f_39 - 1 * EORBIT(52) - 1 * EORBIT(53) - 1 * EORBIT(57) - 2 * EORBIT(59) - 2 * EORBIT(63) - 2 * EORBIT(64) - 2 * EORBIT(65));
+                EORBIT(38) = (f_38 - 3 * EORBIT(49) - 1 * EORBIT(56) - 1 * EORBIT(59));
+                EORBIT(37) = (f_37 - 1 * EORBIT(53) - 1 * EORBIT(59));
+                EORBIT(36) = (f_36 - 1 * EORBIT(52) - 2 * EORBIT(60)) / 2;
+                EORBIT(35) = (f_35 - 6 * EORBIT(48) - 1 * EORBIT(55) - 4 * EORBIT(62) - 1 * EORBIT(64) - 2 * EORBIT(66));
+                EORBIT(34) = (f_34 - 2 * EORBIT(47) - 1 * EORBIT(53) - 1 * EORBIT(55) - 2 * EORBIT(59) - 1 * EORBIT(61) - 2 * EORBIT(64) - 2 * EORBIT(65));
+                EORBIT(33) = (f_33 - 2 * EORBIT(47) - 1 * EORBIT(52) - 2 * EORBIT(54) - 2 * EORBIT(59) - 1 * EORBIT(61) - 2 * EORBIT(63) - 2 * EORBIT(65));
+                EORBIT(32) = (f_32 - 6 * EORBIT(49) - 1 * EORBIT(53) - 2 * EORBIT(59)) / 2;
+                EORBIT(31) = (f_31 - 2 * EORBIT(42) - 1 * EORBIT(44) - 2 * EORBIT(46) - 2 * EORBIT(56) - 2 * EORBIT(57) - 2 * EORBIT(63));
+                EORBIT(30) = (f_30 - 2 * EORBIT(42) - 2 * EORBIT(43) - 1 * EORBIT(44) - 4 * EORBIT(56) - 1 * EORBIT(57) - 2 * EORBIT(63));
+                EORBIT(29) = (f_29 - 2 * EORBIT(38) - 1 * EORBIT(45) - 1 * EORBIT(52)) / 2;
+                EORBIT(28) = (f_28 - 2 * EORBIT(43) - 1 * EORBIT(45) - 1 * EORBIT(52)) / 2;
+                EORBIT(27) = (f_27 - 1 * EORBIT(34) - 1 * EORBIT(47));
+                EORBIT(26) = (f_26 - 1 * EORBIT(33) - 2 * EORBIT(36) - 1 * EORBIT(50) - 1 * EORBIT(52) - 2 * EORBIT(60)) / 2;
+                EORBIT(25) = (f_25 - 2 * EORBIT(32) - 1 * EORBIT(37) - 3 * EORBIT(49) - 1 * EORBIT(53) - 1 * EORBIT(59));
+                EORBIT(24) = (f_24 - 1 * EORBIT(39) - 1 * EORBIT(45) - 1 * EORBIT(52));
+                EORBIT(23) = (f_23 - 2 * EORBIT(36) - 1 * EORBIT(45) - 1 * EORBIT(52) - 2 * EORBIT(58) - 2 * EORBIT(60));
+                EORBIT(22) = (f_22 - 1 * EORBIT(37) - 1 * EORBIT(44) - 1 * EORBIT(53) - 1 * EORBIT(56) - 1 * EORBIT(59));
+                EORBIT(21) = (f_21 - 2 * EORBIT(38) - 2 * EORBIT(43) - 1 * EORBIT(52)) / 2;
+                EORBIT(20) = (f_20 - 1 * EORBIT(40) - 1 * EORBIT(54));
+                EORBIT(19) = (f_19 - 1 * EORBIT(33) - 2 * EORBIT(41) - 1 * EORBIT(45) - 2 * EORBIT(50) - 1 * EORBIT(52) - 4 * EORBIT(58) - 4 * EORBIT(60));
+                EORBIT(18) = (f_18 - 2 * EORBIT(32) - 2 * EORBIT(38) - 1 * EORBIT(44) - 6 * EORBIT(49) - 1 * EORBIT(53) - 2 * EORBIT(56) - 2 * EORBIT(59));
+                EORBIT(17) = (f_17 - 2 * EORBIT(25) - 1 * EORBIT(27) - 1 * EORBIT(32) - 1 * EORBIT(34) - 1 * EORBIT(47)) / 3;
+                EORBIT(16) = (f_16 - 2 * EORBIT(20) - 2 * EORBIT(22) - 1 * EORBIT(31) - 2 * EORBIT(40) - 1 * EORBIT(44) - 2 * EORBIT(54)) / 2;
+                EORBIT(15) = (f_15 - 2 * EORBIT(25) - 2 * EORBIT(29) - 1 * EORBIT(31) - 2 * EORBIT(32) - 1 * EORBIT(34) - 2 * EORBIT(42) - 2 * EORBIT(47));
+                EORBIT(14) = (f_14 - 1 * EORBIT(18) - 2 * EORBIT(21) - 1 * EORBIT(30) - 2 * EORBIT(38) - 1 * EORBIT(39) - 2 * EORBIT(43) - 1 * EORBIT(52)) / 2;
+                EORBIT(13) = (f_13 - 2 * EORBIT(22) - 2 * EORBIT(28) - 1 * EORBIT(31) - 1 * EORBIT(40) - 2 * EORBIT(44) - 2 * EORBIT(54));
+                EORBIT(12) = (f_12 - 2 * EORBIT(21) - 2 * EORBIT(28) - 2 * EORBIT(29) - 2 * EORBIT(38) - 2 * EORBIT(43) - 1 * EORBIT(45) - 1 * EORBIT(52));
             }
         }
     }
