@@ -90,9 +90,6 @@ struct hash_TRIPLE {
 };
 
 
-#define ORBIT(node,orb) (orbits[(node) + (orb) * n])
-#define EORBIT(node,orb) (orbits[(node) + (orb) * m])
-
 #define adj_chunk (8 * sizeof(int))
 
 struct GraphData {
@@ -107,7 +104,9 @@ struct GraphData {
     
     GraphData(PAIR * const edges, int const * const dim_edges);
     int const *triangles() const;
-
+    void common_2_3(
+        unordered_map<PAIR, int, hash_PAIR> &common2,
+        unordered_map<TRIPLE, int, hash_TRIPLE> &common3) const;
     
     inline bool adjacent_list(int const x, int const y) const
     {
@@ -221,6 +220,36 @@ int const *GraphData::triangles() const {
     }
     return tri;
 }
+
+
+void GraphData::common_2_3(
+        unordered_map<PAIR, int, hash_PAIR> &common2,
+        unordered_map<TRIPLE, int, hash_TRIPLE> &common3) const {
+    for (int x = 0; x < n_nodes; x++) {
+        for (int n1 = 0; n1 < deg[x]; n1++) {
+            int const &a = adj[x][n1];
+            for (int n2 = n1 + 1; n2 < deg[x]; n2++) {
+                int const &b = adj[x][n2];
+                common2[PAIR(a, b)]++;
+                for (int n3 = n2 + 1; n3 < deg[x]; n3++) {
+                    int const &c = adj[x][n3];
+                    int const st = adjacent(a, b) + adjacent(a, c) + adjacent(b, c);
+                    if (st < 2)
+                        continue;
+                    common3[TRIPLE(a,b,c)]++;
+                }
+            }
+        }
+    }
+}
+
+#define ORBIT(node,orb) (orbits[(node) + (orb) * n])
+#define EORBIT(node,orb) (orbits[(node) + (orb) * m])
+
+#define common3_get(x) (((common3_it = common3.find(x)) != common3.end()) ? (common3_it->second) : 0)
+#define common2_get(x) (((common2_it = common2.find(x)) != common2.end()) ? (common2_it->second) : 0)
+
+
 
 /** count graphlets on 4 nodes */
 
@@ -358,8 +387,14 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
 {
     try {
         int nn, nn2;
+        unordered_map<PAIR, int, hash_PAIR> common2;
+        unordered_map<TRIPLE, int, hash_TRIPLE> common3;
+        unordered_map<PAIR, int, hash_PAIR>::iterator common2_it;
+        unordered_map<TRIPLE, int, hash_TRIPLE>::iterator common3_it;
+
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
+        data.common_2_3(common2, common3);
 
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
@@ -367,32 +402,6 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
-        
-        // precompute common nodes
-        unordered_map<PAIR, int, hash_PAIR> common2;
-        unordered_map<TRIPLE, int, hash_TRIPLE> common3;
-        unordered_map<PAIR, int, hash_PAIR>::iterator common2_it;
-        unordered_map<TRIPLE, int, hash_TRIPLE>::iterator common3_it;
-        
-        #define common3_get(x) (((common3_it = common3.find(x)) != common3.end()) ? (common3_it->second) : 0)
-        #define common2_get(x) (((common2_it = common2.find(x)) != common2.end()) ? (common2_it->second) : 0)
-        
-        for (int x = 0; x < n; x++) {
-            for (int n1 = 0; n1 < deg[x]; n1++) {
-                int const &a = adj[x][n1];
-                for (int n2 = n1 + 1; n2 < deg[x]; n2++) {
-                    int const &b = adj[x][n2];
-                    common2[PAIR(a, b)]++;
-                    for (int n3 = n2 + 1; n3 < deg[x]; n3++) {
-                        int const &c = adj[x][n3];
-                        int const st = data.adjacent(a, b) + data.adjacent(a, c) + data.adjacent(b, c);
-                        if (st < 2)
-                            continue;
-                        common3[TRIPLE(a, b, c)]++;
-                    }
-                }
-            }
-        }
         
         // count full graphlets
         int64 * const C5 = (int64 *)S_alloc(n, sizeof(int64));
@@ -940,7 +949,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
 
 /** count edge orbits of graphlets on max 5 nodes */
 /*
-extern "C" void ecount5(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
+ extern "C" void ecount5(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
     try {
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
@@ -965,24 +974,6 @@ extern "C" void ecount5(PAIR * const p_edges, int const * const dim_edges, int *
                             continue;
                         common3[TRIPLE(a,b,c)]++;
                     }
-                }
-            }
-        }
-        // precompute triangles that span over edges
-        int * const tri = (int *)S_alloc(m, sizeof(int));
-        for (int i = 0; i < m; i++) {
-            int const &x = edges[i].a, &y = edges[i].b;
-            for (int xi = 0, yi = 0; xi < deg[x] && yi < deg[y]; ) {
-                if (adj[x][xi] == adj[y][yi]) {
-                    tri[i]++;
-                    xi++;
-                    yi++;
-                }
-                else if (adj[x][xi] < adj[y][yi]) {
-                    xi++;
-                }
-                else {
-                    yi++;
                 }
             }
         }
