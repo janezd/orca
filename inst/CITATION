@@ -1,0 +1,19 @@
+citHeader("To cite package 'orca' in publications use:")
+
+vers <- paste("R package version", meta$Version)
+
+citEntry(entry = "article",
+         title = "A combinatorial approach to graphlet counting",
+         author = personList(as.person("Toma\v{z} Ho\v{c}evar"),
+                             as.person("Janez Dem\v{s}ar")),
+         journal = "Bioinformatics",
+         doi = "10.1093/bioinformatics/btt717",
+         url = "http://bioinformatics.oxfordjournals.org/content/early/2014/01/11/bioinformatics.btt717.abstract",
+         year = "2014",
+         note = vers,
+
+         textVersion =
+         paste0("Tomaz Hocevar, Janez Demsar (2014): ",
+                "A combinatorial approach to graphlet counting.",
+                "Bioinformatics.")
+)
