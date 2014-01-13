@@ -277,6 +277,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
         PII const *const *const inc = data.inc;
         
         
+        // count complete graphlets on 4 nodes
         int64 * const C4 = (int64 *)S_alloc(data.n_nodes, sizeof(int64));
         int * const neigh = (int *)S_alloc(n, sizeof(int));
         
@@ -405,7 +406,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
         
-        // count full graphlets
+        // count complete graphlets on four nodes
         int64 * const C4 = (int64 *)S_alloc(m, sizeof(int64));
         int * const neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
         memset(neighx, -1, n * sizeof(int));
@@ -512,7 +513,6 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
                             EORBIT(1)++;
                             EORBIT(10) += tri[xy] - 1;
                             EORBIT(7) += deg[z] - 2;
-                            printf("%i %i %i %i %i\n", x, y, z, e, EORBIT(1));
                         }
                         EORBIT(9) += tri[xz] - 1;
                         EORBIT(8) += deg[x] - 2;
@@ -574,7 +574,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
         
-        // count full graphlets
+        // count complete graphlets on five nodes
         int64 * const C5 = (int64 *)S_alloc(n, sizeof(int64));
         int * const neigh = (int *)R_alloc(n, sizeof(int));
         int * const neigh2 = (int *)R_alloc(n, sizeof(int));
@@ -975,7 +975,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
         
-        // count full graphlets
+        // count complete graphlets on five nodes
         int64 * const C5 = (int64 *)S_alloc(m,sizeof(int64));
         int * const neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
         memset(neighx , -1, n * sizeof(int));

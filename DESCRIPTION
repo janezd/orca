@@ -1,14 +1,15 @@
 Package: orca
-Title: orca: Counting graphlet orbits in sparse graphs
 Version: 0.1
-Author: T. Hocevar, J. Demsar
-Description: A package that implements orbit counting using a combinatorial approach
-Maintainer: J. Demsar <janez.demsar@fri.uni-lj.si>
-License: LGPL
-Depends: R (>= 2.10), methods
+Date: 2014-01-13
+Title: Orca: Counting graphlet orbits in sparse graphs
+Author: Tomaz Hocevar, Janez Demsar
+Description: Implements orbit counting using a fast combinatorial approach
+Maintainer: Janez Demsar <janez.demsar@fri.uni-lj.si>
+License: LGPL-3
+Depends: R (>= 2.10)
 NeedsCompilation: yes
 Imports: methods
-Suggests: 
+Suggests: graph
 Enhances: 
 Collate: orca.R
 LazyLoad: yes
