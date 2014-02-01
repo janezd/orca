@@ -6,11 +6,10 @@ Author: Tomaz Hocevar, Janez Demsar
 Description: Implements orbit counting using a fast combinatorial approach
 Maintainer: Janez Demsar <janez.demsar@fri.uni-lj.si>
 License: LGPL-3
-Depends: R (>= 2.10)
+Depends: R (>= 3.0.0)
+Suggests: graph
 NeedsCompilation: yes
 Imports: methods
-Suggests: graph
-Enhances: 
 Collate: orca.R
 LazyLoad: yes
 Packaged: 2014-01-05
