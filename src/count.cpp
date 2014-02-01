@@ -28,6 +28,9 @@
 using namespace std;
 
 
+//TODO: check for loops and multiple edges to prevent crashes !!!!!!!!!!!!!!
+
+
 typedef long long int64;
 
 typedef pair<int,int> PII;
@@ -262,7 +265,7 @@ void GraphData::common_2_3(
 
 /** count graphlets on 4 nodes */
 
-extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * const orbits)
+extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double * const orbits)
 {
     try {
         int nn;
@@ -280,7 +283,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
         // count complete graphlets on 4 nodes
         int64 * const C4 = (int64 *)S_alloc(data.n_nodes, sizeof(int64));
         int * const neigh = (int *)S_alloc(n, sizeof(int));
-        
+
         for (int x = 0; x < data.n_nodes; x++) {
             for (int nx = 0; nx < data.deg[x]; nx++) {
                 int const &y = adj[x][nx];
@@ -394,7 +397,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, int * 
 
 
 /** count edge orbits of graphlets on max 4 nodes */
-extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
+extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, double * const orbits) {
     try {
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
@@ -554,7 +557,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, int *
 }
 
 
-extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * const orbits)
+extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double * const orbits)
 {
     try {
         int nn, nn2;
@@ -957,7 +960,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, int * 
 
 /** count edge orbits of graphlets on max 5 nodes */
 
- extern "C" void ecount5(PAIR * const p_edges, int const * const dim_edges, int * const orbits) {
+ extern "C" void ecount5(PAIR * const p_edges, int const * const dim_edges, double * const orbits) {
     try {
         unordered_map<PAIR, int, hash_PAIR> common2;
         unordered_map<TRIPLE, int, hash_TRIPLE> common3;

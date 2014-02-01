@@ -6,7 +6,7 @@
 \title{Orbit counting} 
 
 \description{
-Count the node (edge) orbits in 4- or 5- node graphlets for all nodes (edges) in the given graph.
+Count the node or edge orbits in 4- or 5- node graphlets for all nodes (edges) in the given graph.
 }
 
 \usage{
@@ -16,12 +16,12 @@ ecount4(graph)
 ecount5(graph)
 }
 \arguments{
-  \item{graph}{A graph given as a nx2 edge matrix, a data frame with edges or a graphNEL from the package 'graph'.  Nodes are given by indices that start with 1.
+  \item{graph}{A graph given as a nx2 edge matrix, a data frame with edges or a graph object from the package 'graph'. The nodes in the matrix or data frame are given by integer indices that start with 1.
 }
 }
 %% \details{}
 \value{
-An integer matrix, with the rows corresponding to graph nodes (edges) and the columns corresponding to orbit counts.
+A numeric matrix or orbit counts. Rows correspond to graph nodes or edges in the same order as on the input, and the columns corresponding to orbits.
 }
 \references{
 Tomaz Hocevar, Janez Demsar (2014): A combinatorial approach to graphlet counting. Bioinformatics.
