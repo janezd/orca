@@ -28,9 +28,6 @@
 using namespace std;
 
 
-//TODO: check for loops and multiple edges to prevent crashes !!!!!!!!!!!!!!
-
-
 typedef long long int64;
 
 typedef pair<int,int> PII;
@@ -160,6 +157,9 @@ GraphData::GraphData(PAIR * const p_edges, int const * const dim_edges)
         if (edge->a < 0) {
             throw "Node ids should be positive";
         }
+        if (edge->a == edge->b) {
+            throw "Graph contains loops (edges to the same node)";
+        }
         if (edge->b > n_nodes) {
             n_nodes = edge->b;
         }
@@ -178,7 +178,8 @@ GraphData::GraphData(PAIR * const p_edges, int const * const dim_edges)
     }
 
     // set up adjacency matrix if it's smaller than 100MB
-    if ((int64)n_nodes * n_nodes < 100LL * 1024 * 1024 * 8) {
+//    if ((int64)n_nodes * n_nodes < 100LL * 1024 * 1024 * 8) {
+    if (n_nodes < 30000) {
         adj_matrix = (int *)S_alloc((n_nodes * n_nodes) / adj_chunk + 1, sizeof(int));
         for (edge = edges; edge != edges_end; edge++) {
             int const &a = edge->a, &b = edge->b;
@@ -207,6 +208,10 @@ GraphData::GraphData(PAIR * const p_edges, int const * const dim_edges)
     for (int i = 0; i < n_nodes; i++) {
         sort(adj[i], adj[i] + deg[i]);
         sort(inc[i], inc[i] + deg[i]);
+        for (int j = 1; j < deg[i]; j++) {
+            if (adj[i][j] == adj[i][j - 1])
+                throw "Graph contains multiple edges between same nodes";
+        }
     }
 }
 
@@ -273,8 +278,6 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
         int const * const tri = data.triangles();
         
         int const &n = data.n_nodes;
-        int const &m = data.n_edges;
-        PAIR const *const edges = data.edges;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
@@ -404,7 +407,6 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
         
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
-        PAIR const *const edges = data.edges;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
@@ -453,7 +455,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
                 }
             }
             for (int nx = 0; nx < deg[x]; nx++) {
-                int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
+                int const &y = inc[x][nx].first;
                 neighx[y] = -1;
             }
         }
@@ -571,8 +573,6 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
         data.common_2_3(common2, common3);
         
         int const &n = data.n_nodes;
-        int const &m = data.n_edges;
-        PAIR const *const edges = data.edges;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
@@ -733,7 +733,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-12 (diamond)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int na = 0; na < deg[a]; na++) {
@@ -774,7 +774,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-11 (paw)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int nx3 = 0; nx3 < deg[x]; nx3++) {
@@ -791,7 +791,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-10 (paw)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
-                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first;
                     if (!data.adjacent(a, b))
                         continue;
                     for (int nb = 0; nb < deg[b]; nb++) {
@@ -828,7 +828,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-4 (path)
                 for (int na = 0; na < deg[a]; na++) {
-                    int const &b = inc[a][na].first, &ab = inc[a][na].second;
+                    int const &b = inc[a][na].first;
                     if ((b == x) || data.adjacent(x, b))
                         continue;
                     for (int nb = 0;nb < deg[b]; nb++) {
@@ -847,11 +847,11 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-5 (path)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
-                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first;
                     if ((b==a) || data.adjacent(a, b))
                         continue;
                     for (int nb = 0; nb < deg[b]; nb++) {
-                        int const &c = inc[b][nb].first, &bc = inc[b][nb].second;
+                        int const &c = inc[b][nb].first;
                         if ((c == x) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(5)++;
@@ -861,11 +861,11 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-6 (claw)
                 for (int na1 = 0;na1 < deg[a]; na1++) {
-                    int const &b = inc[a][na1].first, &ab = inc[a][na1].second;
+                    int const &b = inc[a][na1].first;
                     if ((b == x) || data.adjacent(x, b))
                         continue;
                     for (int na2 = na1 + 1; na2 < deg[a]; na2++) {
-                        int const &c = inc[a][na2].first, &ac = inc[a][na2].second;
+                        int const &c = inc[a][na2].first;
                         if ((c == x) || data.adjacent(x,c) || data.adjacent(b,c))
                             continue;
                         ORBIT(6)++;
@@ -877,11 +877,11 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 
                 // x = orbit-7 (claw)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
-                    int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
+                    int const &b = inc[x][nx2].first;
                     if (data.adjacent(a, b))
                         continue;
                     for (int nx3 = nx2 + 1; nx3 < deg[x]; nx3++) {
-                        int const &c = inc[x][nx3].first, &xc = inc[x][nx3].second;
+                        int const &c = inc[x][nx3].first;
                         if (data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(7)++;
@@ -973,7 +973,6 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
 
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
-        PAIR const *const edges = data.edges;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
@@ -1041,7 +1040,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 }
             }
             for (int nx = 0; nx < deg[x]; nx++) {
-                int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
+                int const &y = inc[x][nx].first;
                 neighx[y] = -1;
             }
         }
