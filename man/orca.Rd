@@ -28,20 +28,14 @@ Tomaz Hocevar, Janez Demsar (2014): A combinatorial approach to graphlet countin
 }
 \author{
 Tomaz Hocevar and Janez Demsar}
-\note{
-%%  ~~further notes~~
-}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
 library(orca)
-data("randomNetwork")
+data("karate")
 
-count4(randomNetwork)
+count4(karate)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
