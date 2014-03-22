@@ -1,6 +1,0 @@
-library(orca)
-data("randomNetwork")
-count4(randomNetwork)
-count5(randomNetwork)
-ecount4(randomNetwork)
-ecount5(randomNetwork)
