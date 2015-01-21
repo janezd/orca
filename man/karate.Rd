@@ -14,6 +14,6 @@
 \references{
   W. W. Zachary (1977)
   An information flow model for conflict and fission in small groups, 
-  \emph{Journal of Anthropological Research} 33, 452-473.
+  \emph{Journal of Anthropological Research} 33(4), 452-473.
 }
 \keyword{datasets}
