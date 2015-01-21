@@ -32,10 +32,35 @@ Tomaz Hocevar and Janez Demsar}
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-library(orca)
-data("karate")
 
+library(orca)
+
+# Load and show the orbit counts for the Karate graph
+data("karate")
 count4(karate)
+
+
+\dontrun{
+# Simple analysis of School Wikipedia network: find the most similar
+# nodes with respect to the local network topology
+# Requires data from http://www.biolab.si/supp/Rorca/_downloads/schools-wiki.zip
+
+library("FNN")
+
+nodes <- scan("schools-wiki-nodes.txt", what="", sep="\n")
+edges <- read.table("schools-wiki-edges.txt")
+
+orbits <- count4(edges)
+neighbours <- knn.index(orbits, k=10)
+
+check <- c("Canada", "Germany", "Isaac Newton", "Albert Einstein",
+           "Mahatma Gandhi", "Mahabharata")
+node_indices <- match(check, nodes)
+for (i in 1:length(check)) {
+    cat("\n\n", check[i], ": ", sep="")
+    cat(nodes[neighbours[node_indices[i], ]], sep=", ")
+}	
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
