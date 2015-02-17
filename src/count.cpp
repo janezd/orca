@@ -1,17 +1,17 @@
 /*
  Orca (Orbit Counting Algorithm) - A combinatorial approach to graphlet counting
  Copyright (C) 2013  Tomaz Hocevar <tomaz.hocevar@fri.uni-lj.si>
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -41,15 +41,15 @@ struct TIII {
 
 struct PAIR {
 	int a, b;
-    
+
     inline PAIR(int const aa, int const bb)
     : a(min(aa, bb)), b(max(aa, bb))
     {}
-    
+
     inline bool operator <(const PAIR &other) const {
         return (a < other.a) || (a == other.a && b < other.b);
     }
-    
+
     inline bool operator ==(const PAIR &other) const {
         return a == other.a && b == other.b;
     }
@@ -81,7 +81,7 @@ struct TRIPLE {
                (a == other.a && (b < other.b ||
                                  (b == other.b && c < other.c)));
     }
-    
+
     inline bool operator ==(TRIPLE const &other) const {
         return a == other.a && b == other.b && c == other.c;
     }
@@ -105,27 +105,27 @@ struct GraphData {
     int **adj; // adj[x] - adjacency list of node x
     PII **inc; // inc[x] - incidence list of node x: (y, edge id)
     int *adj_matrix; // compressed adjacency matrix; initialized iff smaller than 100 MB
-    
+
     GraphData(PAIR * const edges, int const * const dim_edges);
     int const *triangles() const;
     void common_2_3(
         unordered_map<PAIR, int, hash_PAIR> &common2,
         unordered_map<TRIPLE, int, hash_TRIPLE> &common3) const;
-    
+
     inline bool adjacent_list(int const x, int const y) const
     {
         return binary_search(adj[x], adj[x] + deg[x], y);
     }
-    
+
     inline bool adjacent_matrix(int const x, int const y) const
     {
         return adj_matrix[(x * n_nodes + y) / adj_chunk] & (1 << ((x * n_nodes + y) % adj_chunk));
     }
-    
+
     inline bool adjacent(int const x, int const y) const {
         return adj_matrix ? adjacent_matrix(x, y) : adjacent_list(x, y);
     }
-    
+
     inline int getEdgeId(int const x, int const y) const {
         return inc[x][lower_bound(adj[x], adj[x] + deg[x], y) - adj[x]].second;
     }
@@ -276,13 +276,13 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
         int nn;
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
-        
+
         int const &n = data.n_nodes;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
-        
-        
+
+
         // count complete graphlets on 4 nodes
         int64 * const C4 = (int64 *)S_alloc(data.n_nodes, sizeof(int64));
         int * const neigh = (int *)S_alloc(n, sizeof(int));
@@ -315,7 +315,7 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
                 }
             }
         }
-        
+
         // set up a system of equations relating orbits for every node
         int * const common = (int *)S_alloc(n, sizeof(int));
         int * const common_list = (int *)S_alloc(n, sizeof(int)), nc = 0;
@@ -325,12 +325,12 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
             int64 f_7_11 = 0, f_5_8 = 0;
             int64 f_6_9 = 0, f_9_12 = 0, f_4_8 = 0, f_8_12 = 0;
             int64 f_14 = C4[x];
-            
+
             for (int i = 0; i < nc; i++) {
                 common[common_list[i]] = 0;
             }
             nc = 0;
-            
+
             ORBIT(0) = deg[x];
             // x - middle node
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
@@ -339,8 +339,8 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
                     int const &z = inc[y][ny].first, &ez = inc[y][ny].second;
                     if (data.adjacent(x,z)) { // triangle
                         if (z < y) {
-                            f_12_14 += tri[ez] - 1;
-                            f_10_13 += (deg[y] - 1 - tri[ez]) + (deg[z] - 1 - tri[ez]);
+                            f_12_14 += tri[ez] - 1; // o_{12} + 3o_{14}
+                            f_10_13 += (deg[y] - 1 - tri[ez]) + (deg[z] - 1 - tri[ez]); // o_{10} + 2o_{13}
                         }
                     } else {
                         if (common[z]==0) {
@@ -353,12 +353,12 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
                     int const &z = inc[x][nx2].first, &ez = inc[x][nx2].second;
                     if (data.adjacent(y, z)) { // triangle
                         ORBIT(3)++;
-                        f_13_14 += (tri[ey] -1) + (tri[ez] - 1);
-                        f_11_13 += (deg[x] - 1 - tri[ey]) + (deg[x] - 1 - tri[ez]);
+                        f_13_14 += (tri[ey] -1) + (tri[ez] - 1); // 2o_{13} + 6o_{14}
+                        f_11_13 += (deg[x] - 1 - tri[ey]) + (deg[x] - 1 - tri[ez]); // 2o_{11} + 2o_{13}
                     } else { // path
                         ORBIT(2)++;
-                        f_7_11 += (deg[x] - 1 - tri[ey] - 1) + (deg[x] - 1 - tri[ez] - 1);
-                        f_5_8 += (deg[y] - 1 - tri[ey]) + (deg[z] - 1 - tri[ez]);
+                        f_7_11 += (deg[x] - 1 - tri[ey] - 1) + (deg[x] - 1 - tri[ez] - 1); // 6o_{7} + 2o_{11}
+                        f_5_8 += (deg[y] - 1 - tri[ey]) + (deg[z] - 1 - tri[ez]); // o_{5} + 2o_{8}
                     }
                 }
             }
@@ -371,14 +371,14 @@ extern "C" void count4(PAIR * const p_edges, int const * const dim_edges, double
                         continue;
                     if (!data.adjacent(x,z)) { // path
                         ORBIT(1)++;
-                        f_6_9 += (deg[y] - 1 - tri[ey] - 1);
-                        f_9_12 += tri[ez];
-                        f_4_8 += (deg[z] - 1 - tri[ez]);
-                        f_8_12 += (common[z] - 1);
+                        f_6_9 += (deg[y] - 1 - tri[ey] - 1); // 2o_{6} + 2o_{9}
+                        f_9_12 += tri[ez]; // 2o_{9} + 2o_{12}
+                        f_4_8 += (deg[z] - 1 - tri[ez]); // o_{4} + 2o_{8}
+                        f_8_12 += (common[z] - 1); // 2o_{8} + 2o_{12}
                     }
                 }
             }
-            
+
             // solve system of equations
             ORBIT(14) = (f_14);
             ORBIT(13) = (f_13_14 - 6 * f_14) / 2;
@@ -404,13 +404,13 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
     try {
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
-        
+
         int const &n = data.n_nodes;
         int const &m = data.n_edges;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
-        
+
         // count complete graphlets on four nodes
         int64 * const C4 = (int64 *)S_alloc(m, sizeof(int64));
         int * const neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
@@ -459,7 +459,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
                 neighx[y] = -1;
             }
         }
-        
+
         // count full graphlets for the smallest edge
         for (int x = 0; x < n; x++) {
             for (int nx = deg[x] - 1; nx >= 0; nx--) {
@@ -485,7 +485,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
                 }
             }
         }
-        
+
         // set up a system of equations relating orbits for every node
         int *const common = (int *)S_alloc(n, sizeof(int));
         int *const common_list = (int *)R_alloc(n, sizeof(int)), nc = 0;
@@ -505,7 +505,7 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
                     common[z]++;
                 }
             }
-            
+
             for (int nx = 0; nx < deg[x]; nx++) {
                 int const &y = inc[x][nx].first, &xy = inc[x][nx].second;
                 int const &e = xy;
@@ -516,11 +516,11 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
                     if (data.adjacent(y, z)) { // triangle
                         if (x < y) {
                             EORBIT(1)++;
-                            EORBIT(10) += tri[xy] - 1;
-                            EORBIT(7) += deg[z] - 2;
+                            EORBIT(10) += tri[xy] - 1; // 2e_{10}+2e_{11}
+                            EORBIT(7) += deg[z] - 2; // e_{7}+e_{9}+2e_{11}
                         }
-                        EORBIT(9) += tri[xz] - 1;
-                        EORBIT(8) += deg[x] - 2;
+                        EORBIT(9) += tri[xz] - 1; // e_{9}+4e_{11}
+                        EORBIT(8) += deg[x] - 2; // e_{8}+e_{9}+4e_{10}+4e_{11}
                     }
                 }
                 for (int n1 = 0; n1 < deg[y]; n1++) {
@@ -529,11 +529,11 @@ extern "C" void ecount4(PAIR * const p_edges, int const * const dim_edges, doubl
                         continue;
                     if (!data.adjacent(x, z)) { // path x-y-z
                         EORBIT(0)++;
-                        EORBIT(6) += tri[yz];
-                        EORBIT(5) += common[z]  - 1;
-                        EORBIT(4) += deg[y] - 2;
-                        EORBIT(3) += deg[x] - 1;
-                        EORBIT(2) += deg[z] - 1;
+                        EORBIT(6) += tri[yz]; // 2e_{6}+e_{9}
+                        EORBIT(5) += common[z]  - 1; // 2e_{5}+e_{9}
+                        EORBIT(4) += deg[y] - 2; // 2e_{4}+2e_{6}+e_{8}+e_{9}
+                        EORBIT(3) += deg[x] - 1; // 2e_{3}+2e_{5}+e_{8}+e_{9}
+                        EORBIT(2) += deg[z] - 1; // e_{2}+2e_{5}+2e_{6}+e_{9}
                     }
                 }
             }
@@ -567,16 +567,16 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
         unordered_map<TRIPLE, int, hash_TRIPLE> common3;
         unordered_map<PAIR, int, hash_PAIR>::iterator common2_it;
         unordered_map<TRIPLE, int, hash_TRIPLE>::iterator common3_it;
-        
+
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
         data.common_2_3(common2, common3);
-        
+
         int const &n = data.n_nodes;
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
-        
+
         // count complete graphlets on five nodes
         int64 * const C5 = (int64 *)S_alloc(n, sizeof(int64));
         int * const neigh = (int *)R_alloc(n, sizeof(int));
@@ -620,19 +620,19 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 }
             }
         }
-        
+
         int * const common_x = (int *)S_alloc(n, sizeof(int));
         int * const common_x_list = (int *)R_alloc(n, sizeof(int)), ncx = 0;
         int * const common_a = (int *)S_alloc(n, sizeof(int));
         int * const common_a_list = (int *)R_alloc(n, sizeof(int)), nca = 0;
-        
+
         // set up a system of equations relating orbit counts
         for (int x = 0; x < n; x++) {
             for (int i = 0; i < ncx; i++) {
                 common_x[common_x_list[i]] = 0;
             }
             ncx = 0;
-            
+
             // smaller graphlets
             ORBIT(0) = deg[x];
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
@@ -654,7 +654,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                     }
                 }
             }
-            
+
             int64 f_71 = 0, f_70 = 0, f_67 = 0, f_66 = 0, f_58 = 0, f_57 = 0; // 14
             int64 f_69 = 0, f_68 = 0, f_64 = 0, f_61 = 0, f_60 = 0, f_55 = 0, f_48 = 0, f_42 = 0, f_41 = 0; // 13
             int64 f_65 = 0, f_63 = 0, f_59 = 0, f_54 = 0, f_47 = 0, f_46 = 0, f_40 = 0; // 12
@@ -666,10 +666,10 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
             int64 f_17 = 0; // 5
             int64 f_22 = 0, f_20 = 0, f_19 = 0; // 6
             int64 f_23 = 0, f_21 = 0; // 7
-            
+
             for (int nx1 = 0; nx1 < deg[x]; nx1++) {
                 int const &a = inc[x][nx1].first, &xa = inc[x][nx1].second;
-                
+
                 for (int i = 0; i < nca; i++)
                     common_a[common_a_list[i]] = 0;
                 nca = 0;
@@ -684,7 +684,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         common_a[c]++;
                     }
                 }
-                
+
                 // x = orbit-14 (tetrahedron)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
@@ -695,19 +695,19 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (!data.adjacent(a, c) || !data.adjacent(b, c))
                             continue;
                         ORBIT(14)++;
-                        f_70 += common3_get(TRIPLE(a, b, c)) - 1;
-                        f_71 += (tri[xa] > 2 && tri[xb] > 2) ? common3_get(TRIPLE(x, a, b)) - 1 : 0;
+                        f_70 += common3_get(TRIPLE(a, b, c)) - 1; // o_{70}+4o_{72}
+                        f_71 += (tri[xa] > 2 && tri[xb] > 2) ? common3_get(TRIPLE(x, a, b)) - 1 : 0; // 2o_{71}+12o_{72}
                         f_71 += (tri[xa] > 2 && tri[xc] > 2) ? common3_get(TRIPLE(x, a, c)) - 1 : 0;
                         f_71 += (tri[xb] > 2 && tri[xc] > 2) ? common3_get(TRIPLE(x, b, c)) - 1 : 0;
-                        f_67 += tri[xa] - 2 + tri[xb] - 2 + tri[xc] - 2;
-                        f_66 += common2_get(PAIR(a, b)) - 2;
+                        f_67 += tri[xa] - 2 + tri[xb] - 2 + tri[xc] - 2; // o_{67}+12o_{72}+4o_{71}
+                        f_66 += common2_get(PAIR(a, b)) - 2; // o_{66}+12o_{72}+2o_{71}+3o_{70}
                         f_66 += common2_get(PAIR(a, c)) - 2;
                         f_66 += common2_get(PAIR(b, c)) - 2;
-                        f_58 += deg[x] - 3;
-                        f_57 += deg[a] - 3 + deg[b] - 3 + deg[c] - 3;
+                        f_58 += deg[x] - 3; // o_{58}+4o_{72}+2o_{71}+o_{67}
+                        f_57 += deg[a] - 3 + deg[b] - 3 + deg[c] - 3; // o_{57}+12o_{72}+4o_{71}+3o_{70}+o_{67}+2o_{66}
                     }
                 }
-                
+
                 // x = orbit-13 (diamond)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
@@ -718,19 +718,19 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (!data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(13)++;
-                        f_69 += (tri[xb] > 1 && tri[xc] > 1) ? common3_get(TRIPLE(x, b, c)) - 1 : 0;
-                        f_68 += common3_get(TRIPLE(a, b, c)) - 1;
-                        f_64 += common2_get(PAIR(b, c)) - 2;
-                        f_61 += tri[xb] - 1 + tri[xc] - 1;
-                        f_60 += common2_get(PAIR(a, b)) - 1;
+                        f_69 += (tri[xb] > 1 && tri[xc] > 1) ? common3_get(TRIPLE(x, b, c)) - 1 : 0; // 4o_{69}+2o_{71}
+                        f_68 += common3_get(TRIPLE(a, b, c)) - 1; // o_{68}+2o_{71}
+                        f_64 += common2_get(PAIR(b, c)) - 2; // o_{64}+2o_{71}+4o_{69}+o_{68}
+                        f_61 += tri[xb] - 1 + tri[xc] - 1; // 2o_{61}+4o_{71}+8o_{69}+2o_{67}
+                        f_60 += common2_get(PAIR(a, b)) - 1; // o_{60}+4o_{71}+2o_{68}+2o_{67}
                         f_60 += common2_get(PAIR(a, c)) - 1;
-                        f_55 += tri[xa] - 2;
-                        f_48 += deg[b] - 2 + deg[c] - 2;
-                        f_42 += deg[x] - 3;
-                        f_41 += deg[a] - 3;
+                        f_55 += tri[xa] - 2; // 3o_{55}+2o_{71}+2o_{67}
+                        f_48 += deg[b] - 2 + deg[c] - 2; // o_{48}+4o_{71}+8o_{69}+2o_{68}+2o_{67}+2o_{64}+2o_{61}+o_{60}
+                        f_42 += deg[x] - 3; // o_{42}+2o_{71}+4o_{69}+2o_{67}+2o_{61}+3o_{55}
+                        f_41 += deg[a] - 3; // o_{41}+2o_{71}+o_{68}+2o_{67}+o_{60}+3o_{55}
                     }
                 }
-                
+
                 // x = orbit-12 (diamond)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first;
@@ -741,16 +741,16 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == x) || data.adjacent(x, c) || !data.adjacent(b, c))
                             continue;
                         ORBIT(12)++;
-                        f_65 += (tri[ac] > 1) ? common3_get(TRIPLE(a, b, c)) : 0;
-                        f_63 += common_x[c] - 2;
-                        f_59 += tri[ac] - 1 + common2_get(PAIR(b, c)) - 1;
-                        f_54 += common2_get(PAIR(a, b)) - 2;
-                        f_47 += deg[x] - 2;
-                        f_46 += deg[c] - 2;
-                        f_40 += deg[a] - 3 + deg[b] - 3;
+                        f_65 += (tri[ac] > 1) ? common3_get(TRIPLE(a, b, c)) : 0; // 2o_{65}+3o_{70}
+                        f_63 += common_x[c] - 2; // o_{63}+3o_{70}+2o_{68}
+                        f_59 += tri[ac] - 1 + common2_get(PAIR(b, c)) - 1; // o_{59}+6o_{70}+2o_{68}+4o_{65}
+                        f_54 += common2_get(PAIR(a, b)) - 2; // 2o_{54}+3o_{70}+o_{66}+2o_{65}
+                        f_47 += deg[x] - 2; // o_{47}+3o_{70}+2o_{68}+o_{66}+o_{63}+o_{60}
+                        f_46 += deg[c] - 2; // o_{46}+3o_{70}+2o_{68}+2o_{65}+o_{63}+o_{59}
+                        f_40 += deg[a] - 3 + deg[b] - 3; // o_{40}+6o_{70}+2o_{68}+2o_{66}+4o_{65}+o_{60}+o_{59}+4o_{54}
                     }
                 }
-                
+
                 // x = orbit-8 (cycle)
                 for (int nx2  =nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first, &xb = inc[x][nx2].second;
@@ -761,17 +761,17 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == x) || data.adjacent(x, c) || !data.adjacent(b, c))
                             continue;
                         ORBIT(8)++;
-                        f_62 += (tri[ac] > 0) ? common3_get(TRIPLE(a, b, c)) : 0;
-                        f_53 += tri[xa] + tri[xb];
-                        f_51 += tri[ac] + common2_get(PAIR(c, b));
-                        f_50 += common_x[c] - 2;
-                        f_49 += common_a[b] - 2;
-                        f_38 += deg[x] - 2;
-                        f_37 += deg[a] - 2 + deg[b] - 2;
-                        f_36 += deg[c] - 2;
+                        f_62 += (tri[ac] > 0) ? common3_get(TRIPLE(a, b, c)) : 0; // 2o_{62}+o_{68}
+                        f_53 += tri[xa] + tri[xb]; // o_{53}+2o_{68}+2o_{64}+2o_{63}
+                        f_51 += tri[ac] + common2_get(PAIR(c, b)); // o_{51}+2o_{68}+2o_{63}+4o_{62}
+                        f_50 += common_x[c] - 2; // 3o_{50}+o_{68}+2o_{63}
+                        f_49 += common_a[b] - 2; // 2o_{49}+o_{68}+o_{64}+2o_{62}
+                        f_38 += deg[x] - 2; // o_{38}+o_{68}+o_{64}+2o_{63}+o_{53}+3o_{50}
+                        f_37 += deg[a] - 2 + deg[b] - 2; // o_{37}+2o_{68}+2o_{64}+2o_{63}+4o_{62}+o_{53}+o_{51}+4o_{49}
+                        f_36 += deg[c] - 2; // o_{36}+o_{68}+2o_{63}+2o_{62}+o_{51}+3o_{50}
                     }
                 }
-                
+
                 // x = orbit-11 (paw)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first;
@@ -782,13 +782,13 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == a) || (c==b) || data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(11)++;
-                        f_44 += tri[xc];
-                        f_33 += deg[x] - 3;
-                        f_30 += deg[c] - 1;
-                        f_26 += deg[a] - 2 + deg[b] - 2;
+                        f_44 += tri[xc]; // 4o_{44}+o_{67}+2o_{61}
+                        f_33 += deg[x] - 3; // 2o_{33}+o_{67}+2o_{61}+3o_{58}+4o_{44}+2o_{42}
+                        f_30 += deg[c] - 1; // o_{30}+o_{67}+o_{63}+2o_{61}+o_{53}+4o_{44}
+                        f_26 += deg[a] - 2 + deg[b] - 2; // o_{26}+2o_{67}+2o_{63}+2o_{61}+6o_{58}+o_{53}+2o_{47}+2o_{42}
                     }
                 }
-                
+
                 // x = orbit-10 (paw)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first;
@@ -799,14 +799,14 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == x) || (c == a) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(10)++;
-                        f_52 += common_a[c] - 1;
-                        f_43 += tri[bc];
-                        f_32 += deg[b] - 3;
-                        f_29 += deg[c] - 1;
-                        f_25 += deg[a] - 2;
+                        f_52 += common_a[c] - 1; // 2o_{52}+2o_{66}+2o_{64}+o_{59}
+                        f_43 += tri[bc]; // 2o_{43}+2o_{66}+o_{60}+o_{59}
+                        f_32 += deg[b] - 3; // 2o_{32}+2o_{66}+o_{60}+o_{59}+2o_{57}+2o_{43}+2o_{41}+o_{40}
+                        f_29 += deg[c] - 1; // o_{29}+2o_{66}+2o_{64}+o_{60}+o_{59}+o_{53}+2o_{52}+2o_{43}
+                        f_25 += deg[a] - 2; // 2o_{25}+2o_{66}+2o_{64}+o_{59}+2o_{57}+2o_{52}+o_{48}+o_{40}
                     }
                 }
-                
+
                 // x = orbit-9 (paw)
                 for (int na1 = 0; na1 < deg[a]; na1++) {
                     int const &b = inc[a][na1].first, &ab = inc[a][na1].second;
@@ -817,15 +817,15 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == x) || !data.adjacent(b, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(9)++;
-                        f_56 += (tri[ab] > 1 && tri[ac] > 1) ? common3_get(TRIPLE(a, b, c)) : 0;
-                        f_45 += common2_get(PAIR(b, c)) - 1;
-                        f_39 += tri[ab] - 1 + tri[ac] - 1;
-                        f_31 += deg[a] - 3;
-                        f_28 += deg[x] - 1;
-                        f_24 += deg[b] - 2 + deg[c] - 2;
+                        f_56 += (tri[ab] > 1 && tri[ac] > 1) ? common3_get(TRIPLE(a, b, c)) : 0; // 3o_{56}+2o_{65}
+                        f_45 += common2_get(PAIR(b, c)) - 1; // o_{45}+2o_{65}+2o_{62}+3o_{56}
+                        f_39 += tri[ab] - 1 + tri[ac] - 1; // 2o_{39}+4o_{65}+o_{59}+6o_{56}
+                        f_31 += deg[a] - 3; // o_{31}+2o_{65}+o_{59}+3o_{56}+o_{43}+2o_{39}
+                        f_28 += deg[x] - 1; // o_{28}+2o_{65}+2o_{62}+o_{59}+o_{51}+o_{43}
+                        f_24 += deg[b] - 2 + deg[c] - 2; // o_{24}+4o_{65}+4o_{62}+o_{59}+6o_{56}+o_{51}+2o_{45}+2o_{39}
                     }
                 }
-                
+
                 // x = orbit-4 (path)
                 for (int na = 0; na < deg[a]; na++) {
                     int const &b = inc[a][na].first;
@@ -836,15 +836,15 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == a) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(4)++;
-                        f_35 += common_a[c] - 1;
-                        f_34 += common_x[c];
-                        f_27 += tri[bc];
-                        f_18 += deg[b] - 2;
-                        f_16 += deg[x] - 1;
-                        f_15 += deg[c] - 1;
+                        f_35 += common_a[c] - 1; // 2o_{35}+o_{59}+2o_{52}+2o_{45}
+                        f_34 += common_x[c]; // 2o_{34}+o_{59}+2o_{52}+o_{51}
+                        f_27 += tri[bc]; // 2o_{27}+o_{59}+o_{51}+2o_{45}
+                        f_18 += deg[b] - 2; // 2o_{18}+o_{59}+o_{51}+2o_{46}+2o_{45}+2o_{36}+2o_{27}+o_{24}
+                        f_16 += deg[x] - 1; // o_{16}+o_{59}+2o_{52}+o_{51}+2o_{46}+2o_{36}+2o_{34}+o_{29}
+                        f_15 += deg[c] - 1; // o_{15}+o_{59}+2o_{52}+o_{51}+2o_{45}+2o_{35}+2o_{34}+2o_{27}
                     }
                 }
-                
+
                 // x = orbit-5 (path)
                 for (int nx2 = 0; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first;
@@ -855,10 +855,10 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == x) || data.adjacent(a, c) || data.adjacent(x, c))
                             continue;
                         ORBIT(5)++;
-                        f_17 += deg[a] - 1;
+                        f_17 += deg[a] - 1; // 2o_{17}+o_{60}+o_{53}+o_{51}+o_{48}+o_{37}+2o_{34}+2o_{30}
                     }
                 }
-                
+
                 // x = orbit-6 (claw)
                 for (int na1 = 0;na1 < deg[a]; na1++) {
                     int const &b = inc[a][na1].first;
@@ -869,12 +869,12 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if ((c == x) || data.adjacent(x,c) || data.adjacent(b,c))
                             continue;
                         ORBIT(6)++;
-                        f_22 += deg[a] - 3;
-                        f_20 += deg[x] - 1;
-                        f_19 += deg[b] - 1 + deg[c] - 1;
+                        f_22 += deg[a] - 3; // 3o_{22}+2o_{54}+o_{40}+o_{39}+o_{32}+2o_{31}
+                        f_20 += deg[x] - 1; // o_{20}+2o_{54}+2o_{49}+o_{40}+o_{37}+o_{32}
+                        f_19 += deg[b] - 1 + deg[c] - 1; // o_{19}+4o_{54}+4o_{49}+o_{40}+2o_{39}+o_{37}+2o_{35}+2o_{31}
                     }
                 }
-                
+
                 // x = orbit-7 (claw)
                 for (int nx2 = nx1 + 1; nx2 < deg[x]; nx2++) {
                     int const &b = inc[x][nx2].first;
@@ -885,12 +885,12 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (data.adjacent(a, c) || data.adjacent(b, c))
                             continue;
                         ORBIT(7)++;
-                        f_23 += deg[x] - 3;
-                        f_21 += deg[a] - 1 + deg[b] - 1 + deg[c] - 1;
+                        f_23 += deg[x] - 3; // 4o_{23}+o_{55}+o_{42}+2o_{33}
+                        f_21 += deg[a] - 1 + deg[b] - 1 + deg[c] - 1; // o_{21}+3o_{55}+3o_{50}+2o_{42}+2o_{38}+2o_{33}
                     }
                 }
             }
-            
+
             // solve equations
             ORBIT(72) = C5[x];
             ORBIT(71) = (f_71 - 12 * ORBIT(72)) / 2;
@@ -966,7 +966,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
         unordered_map<TRIPLE, int, hash_TRIPLE> common3;
         unordered_map<PAIR, int, hash_PAIR>::iterator common2_it;
         unordered_map<TRIPLE, int, hash_TRIPLE>::iterator common3_it;
-        
+
         GraphData data(p_edges, dim_edges);
         int const * const tri = data.triangles();
         data.common_2_3(common2, common3);
@@ -976,7 +976,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
         int const *const deg = data.deg;
         int const *const *const adj = data.adj;
         PII const *const *const inc = data.inc;
-        
+
         // count complete graphlets on five nodes
         int64 * const C5 = (int64 *)S_alloc(m,sizeof(int64));
         int * const neighx = (int *)R_alloc(n, sizeof(int)); // lookup table - edges to neighbors of x
@@ -1044,13 +1044,13 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 neighx[y] = -1;
             }
         }
-        
+
         // set up a system of equations relating orbits for every node
         int * const common_x = (int *)S_alloc(n,sizeof(int));
         int * const common_x_list = (int *)R_alloc(n, sizeof(int)), nc_x = 0;
         int * const common_y = (int *)S_alloc(n, sizeof(int));
         int * const common_y_list = (int *)R_alloc(n, sizeof(int)), nc_y = 0;
-        
+
         for (int x = 0; x < n; x++) {
             // common nodes of x and some other node
             for (int i = 0; i < nc_x; i++)
@@ -1072,7 +1072,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 int const &e = xy;
                 if (y >= x)
                     break;
-                
+
                 // common nodes of y and some other node
                 for (int i = 0; i < nc_y; i++)
                     common_y[common_y_list[i]] = 0;
@@ -1088,7 +1088,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         common_y[z]++;
                     }
                 }
-                
+
                 int64 f_66 = 0, f_65 = 0, f_62 = 0, f_61 = 0, f_60 = 0, f_51 = 0, f_50 = 0; // 11
                 int64 f_64 = 0, f_58 = 0, f_55 = 0, f_48 = 0, f_41 = 0, f_35 = 0; // 10
                 int64 f_63 = 0, f_59 = 0, f_57 = 0, f_54 = 0, f_53 = 0, f_52 = 0, f_47 = 0, f_40 = 0, f_39 = 0, f_34 = 0, f_33 = 0; // 9
@@ -1098,7 +1098,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                 int64 f_27 = 0, f_17 = 0, f_15 = 0; // 4
                 int64 f_20 = 0, f_16 = 0, f_13 = 0; // 3
                 int64 f_29 = 0, f_28 = 0, f_24 = 0, f_21 = 0, f_14 = 0, f_12 = 0; // 2
-                
+
                 // smaller (3-node) graphlets
                 for (int nx1 = 0; nx1 < deg[x]; nx1++) {
                     int const &z = adj[x][nx1];
@@ -1116,7 +1116,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                     if (!data.adjacent(x, z))
                         EORBIT(0)++;
                 }
-                
+
                 // edge-orbit 11 = (14,14)
                 for (int nx1 = 0; nx1 < deg[x]; nx1++) {
                     int const &a = adj[x][nx1], &xa = inc[x][nx1].second;
@@ -1128,18 +1128,18 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                             continue;
                         int const &ya = data.getEdgeId(y,a), &yb = data.getEdgeId(y,b), &ab = data.getEdgeId(a,b);
                         EORBIT(11)++;
-                        f_66 += common3_get(TRIPLE(x, y, a)) - 1;
+                        f_66 += common3_get(TRIPLE(x, y, a)) - 1; // 2e_{66}+6e_{67}
                         f_66 += common3_get(TRIPLE(x, y, b)) - 1;
-                        f_65 += common3_get(TRIPLE(a, b, x)) - 1;
+                        f_65 += common3_get(TRIPLE(a, b, x)) - 1; // e_{65}+6e_{67}
                         f_65 += common3_get(TRIPLE(a, b, y)) - 1;
-                        f_62 += tri[xy] - 2;
-                        f_61 += (tri[xa] - 2) + (tri[xb] - 2) + (tri[ya] - 2) + (tri[yb] - 2);
-                        f_60 += tri[ab] - 2;
-                        f_51 += (deg[x]  -3) + (deg[y] - 3);
-                        f_50 += (deg[a] - 3) + (deg[b] - 3);
+                        f_62 += tri[xy] - 2; // e_{62}+2e_{66}+3e_{67}
+                        f_61 += (tri[xa] - 2) + (tri[xb] - 2) + (tri[ya] - 2) + (tri[yb] - 2); // e_{61}+2e_{65}+4e_{66}+12e_{67}
+                        f_60 += tri[ab] - 2; // e_{60}+e_{65}+3e_{67}
+                        f_51 += (deg[x]  -3) + (deg[y] - 3); // e_{51}+e_{61}+2e_{62}+e_{65}+4e_{66}+6e_{67}
+                        f_50 += (deg[a] - 3) + (deg[b] - 3); // e_{50}+2e_{60}+e_{61}+2e_{65}+2e_{66}+6e_{67}
                     }
                 }
-                
+
                 // edge-orbit 10 = (13,13)
                 for (int nx1 = 0;nx1 < deg[x]; nx1++) {
                     int const &a = adj[x][nx1], &xa = inc[x][nx1].second;
@@ -1151,16 +1151,16 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                             continue;
                         int const &ya = data.getEdgeId(y, a), &yb = data.getEdgeId(y, b);
                         EORBIT(10)++;
-                        f_64 += common3_get(TRIPLE(a, b, x)) - 1;
+                        f_64 += common3_get(TRIPLE(a, b, x)) - 1; // e_{64}+2e_{66}
                         f_64 += common3_get(TRIPLE(a, b, y)) - 1;
-                        f_58 += common2_get(PAIR(a, b)) - 2;
-                        f_55 += (tri[xa] - 1) + (tri[xb] - 1) + (tri[ya] - 1) + (tri[yb] - 1);
-                        f_48 += tri[xy] - 2;
-                        f_41 += (deg[a] - 2) + (deg[b] - 2);
-                        f_35 += (deg[x] - 3) + (deg[y] - 3);
+                        f_58 += common2_get(PAIR(a, b)) - 2; // e_{58}+e_{64}+e_{66}
+                        f_55 += (tri[xa] - 1) + (tri[xb] - 1) + (tri[ya] - 1) + (tri[yb] - 1); // e_{55}+4e_{62}+2e_{64}+4e_{66}
+                        f_48 += tri[xy] - 2; // 3e_{48}+2e_{62}+e_{66}
+                        f_41 += (deg[a] - 2) + (deg[b] - 2); // e_{41}+e_{55}+2e_{58}+2e_{62}+2e_{64}+2e_{66}
+                        f_35 += (deg[x] - 3) + (deg[y] - 3); // e_{35}+6e_{48}+e_{55}+4e_{62}+e_{64}+2e_{66}
                     }
                 }
-                
+
                 // edge-orbit 9 = (12,13)
                 for (int nx = 0; nx < deg[x]; nx++) {
                     int const &a = adj[x][nx], &xa = inc[x][nx].second;
@@ -1177,16 +1177,16 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         EORBIT(9)++;
                         if (adj_xb) {
                             int const &xb = data.getEdgeId(x, b);
-                            f_63 += common3_get(TRIPLE(a, b, y)) - 1;
-                            f_59 += common3_get(TRIPLE(a, b, x));
-                            f_57 += common_y[a] - 2;
-                            f_54 += tri[yb] - 1;
-                            f_53 += tri[xa] - 1;
-                            f_47 += tri[xb] - 2;
-                            f_40 += deg[y] - 2;
-                            f_39 += deg[a] - 2;
-                            f_34 += deg[x] - 3;
-                            f_33 += deg[b] - 3;
+                            f_63 += common3_get(TRIPLE(a, b, y)) - 1; // 2e_{63}+2e_{65}
+                            f_59 += common3_get(TRIPLE(a, b, x)); // 2e_{59}+2e_{65}
+                            f_57 += common_y[a] - 2; // e_{57}+2e_{63}+2e_{64}+2e_{65}
+                            f_54 += tri[yb] - 1; // 2e_{54}+e_{61}+2e_{63}+2e_{65}
+                            f_53 += tri[xa] - 1; // e_{53}+2e_{59}+2e_{64}+2e_{65}
+                            f_47 += tri[xb] - 2; // 2e_{47}+2e_{59}+e_{61}+2e_{65}
+                            f_40 += deg[y] - 2; // e_{40}+2e_{54}+e_{55}+e_{57}+e_{61}+2e_{63}+2e_{64}+2e_{65}
+                            f_39 += deg[a] - 2; // e_{39}+e_{52}+e_{53}+e_{57}+2e_{59}+2e_{63}+2e_{64}+2e_{65}
+                            f_34 += deg[x] - 3; // e_{34}+2e_{47}+e_{53}+e_{55}+2e_{59}+e_{61}+2e_{64}+2e_{65}
+                            f_33 += deg[b] - 3; // e_{33}+2e_{47}+e_{52}+2e_{54}+2e_{59}+e_{61}+2e_{63}+2e_{65}
                         } else if (adj_ya) {
                             int const &ya = data.getEdgeId(y, a);
                             f_63 += common3_get(TRIPLE(a, b, x)) - 1;
@@ -1200,10 +1200,10 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                             f_34 += deg[y] - 3;
                             f_33 += deg[a] - 3;
                         }
-                        f_52 += tri[ab] - 1;
+                        f_52 += tri[ab] - 1; // e_{52}+2e_{59}+2e_{63}+2e_{65}
                     }
                 }
-                
+
                 // edge-orbit 8 = (10,11)
                 for (int nx = 0; nx < deg[x]; nx++) {
                     int const &a = adj[x][nx];
@@ -1222,7 +1222,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         EORBIT(8)++;
                     }
                 }
-                
+
                 // edge-orbit 7 = (10,10)
                 for (int nx = 0;nx < deg[x]; nx++) {
                     int const &a = adj[x][nx];
@@ -1233,15 +1233,15 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (b == x || b == y || data.adjacent(x, b) || data.adjacent(y, b))
                             continue;
                         EORBIT(7)++;
-                        f_45 += common_x[b] - 1;
+                        f_45 += common_x[b] - 1; // e_{45}+e_{52}+4e_{58}+4e_{60}
                         f_45 += common_y[b] - 1;
-                        f_36 += tri[ab];
-                        f_26 += deg[a] - 3;
-                        f_23 += deg[b] - 1;
-                        f_19 += (deg[x] - 2) + (deg[y] - 2);
+                        f_36 += tri[ab]; // 2e_{36}+e_{52}+2e_{60}
+                        f_26 += deg[a] - 3; // 2e_{26}+e_{33}+2e_{36}+e_{50}+e_{52}+2e_{60}
+                        f_23 += deg[b] - 1; // e_{23}+2e_{36}+e_{45}+e_{52}+2e_{58}+2e_{60}
+                        f_19 += (deg[x] - 2) + (deg[y] - 2); // e_{19}+e_{33}+2e_{41}+e_{45}+2e_{50}+e_{52}+4e_{58}+4e_{60}
                     }
                 }
-                
+
                 // edge-orbit 6 = (9,11)
                 for (int ny1 = 0;ny1 < deg[y]; ny1++) {
                     int const &a = adj[y][ny1], &ya = inc[y][ny1].second;
@@ -1253,13 +1253,13 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                             continue;
                         int const &ab = data.getEdgeId(a, b);
                         EORBIT(6)++;
-                        f_49 += common3_get(TRIPLE(y, a, b));
-                        f_38 += tri[ab] - 1;
-                        f_37 += tri[xy];
-                        f_32 += (tri[ya] - 1) + (tri[yb] - 1);
-                        f_25 += deg[y] - 3;
-                        f_22 += deg[x] - 1;
-                        f_18 += (deg[a] - 2) + (deg[b] - 2);
+                        f_49 += common3_get(TRIPLE(y, a, b)); // 3e_{49}+e_{59}
+                        f_38 += tri[ab] - 1; // e_{38}+3e_{49}+e_{56}+e_{59}
+                        f_37 += tri[xy]; // e_{37}+e_{53}+e_{59}
+                        f_32 += (tri[ya] - 1) + (tri[yb] - 1); // 2e_{32}+6e_{49}+e_{53}+2e_{59}
+                        f_25 += deg[y] - 3; // e_{25}+2e_{32}+e_{37}+3e_{49}+e_{53}+e_{59}
+                        f_22 += deg[x] - 1; // e_{22}+e_{37}+e_{44}+e_{53}+e_{56}+e_{59}
+                        f_18 += (deg[a] - 2) + (deg[b] - 2); // e_{18}+2e_{32}+2e_{38}+e_{44}+6e_{49}+e_{53}+2e_{56}+2e_{59}
                     }
                 }
                 for (int nx1 = 0; nx1 < deg[x]; nx1++) {
@@ -1281,7 +1281,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         f_18 += (deg[a] - 2) + (deg[b] - 2);
                     }
                 }
-                
+
                 // edge-orbit 5 = (8,8)
                 for (int nx = 0;nx < deg[x]; nx++) {
                     int const &a = adj[x][nx], &xa = inc[x][nx].second;
@@ -1293,18 +1293,18 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                             continue;
                         int const &ab = data.getEdgeId(a, b);
                         EORBIT(5)++;
-                        f_56 += common3_get(TRIPLE(x, a, b));
+                        f_56 += common3_get(TRIPLE(x, a, b)); // 2e_{56}+2e_{63}
                         f_56 += common3_get(TRIPLE(y, a, b));
-                        f_46 += tri[xy];
-                        f_44 += tri[xa] + tri[yb];
-                        f_43 += tri[ab];
-                        f_42 += common_x[b] - 2;
+                        f_46 += tri[xy]; // e_{46}+e_{57}+e_{63}
+                        f_44 += tri[xa] + tri[yb]; // e_{44}+2e_{56}+e_{57}+2e_{63}
+                        f_43 += tri[ab]; // e_{43}+2e_{56}+e_{63}
+                        f_42 += common_x[b] - 2; // 2e_{42}+2e_{56}+e_{57}+2e_{63}
                         f_42 += common_y[a] - 2;
-                        f_31 += (deg[x] - 2) + (deg[y] - 2);
-                        f_30 += (deg[a] - 2) + (deg[b] - 2);
+                        f_31 += (deg[x] - 2) + (deg[y] - 2); // e_{31}+2e_{42}+e_{44}+2e_{46}+2e_{56}+2e_{57}+2e_{63}
+                        f_30 += (deg[a] - 2) + (deg[b] - 2); // e_{30}+2e_{42}+2e_{43}+e_{44}+4e_{56}+e_{57}+2e_{63}
                     }
                 }
-                
+
                 // edge-orbit 4 = (6,7)
                 for (int ny1 = 0; ny1 < deg[y]; ny1++) {
                     int const &a = adj[y][ny1];
@@ -1315,9 +1315,9 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (b == x || data.adjacent(x, b) || data.adjacent(a, b))
                             continue;
                         EORBIT(4)++;
-                        f_27 += tri[xy];
-                        f_17 += deg[y] - 3;
-                        f_15 += (deg[a] - 1) + (deg[b] - 1);
+                        f_27 += tri[xy]; // e_{27}+e_{34}+e_{47}
+                        f_17 += deg[y] - 3; // 3e_{17}+2e_{25}+e_{27}+e_{32}+e_{34}+e_{47}
+                        f_15 += (deg[a] - 1) + (deg[b] - 1); // e_{15}+2e_{25}+2e_{29}+e_{31}+2e_{32}+e_{34}+2e_{42}+2e_{47}
                     }
                 }
                 for (int nx1 = 0; nx1 < deg[x]; nx1++) {
@@ -1334,7 +1334,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         f_15 += (deg[a] - 1) + (deg[b] - 1);
                     }
                 }
-                
+
                 // edge-orbit 3 = (5,5)
                 for (int nx = 0; nx < deg[x]; nx++) {
                     int const &a = adj[x][nx];
@@ -1345,12 +1345,12 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (b == x || data.adjacent(x,b) || data.adjacent(a,b))
                             continue;
                         EORBIT(3)++;
-                        f_20 += tri[xy];
-                        f_16 += (deg[x] - 2) + (deg[y] - 2);
-                        f_13 += (deg[a] - 1) + (deg[b] - 1);
+                        f_20 += tri[xy]; // e_{20}+e_{40}+e_{54}
+                        f_16 += (deg[x] - 2) + (deg[y] - 2); // 2e_{16}+2e_{20}+2e_{22}+e_{31}+2e_{40}+e_{44}+2e_{54}
+                        f_13 += (deg[a] - 1) + (deg[b] - 1); // e_{13}+2e_{22}+2e_{28}+e_{31}+e_{40}+2e_{44}+2e_{54}
                     }
                 }
-                
+
                 // edge-orbit 2 = (4,5)
                 for (int ny = 0; ny < deg[y]; ny++) {
                     int const &a = adj[y][ny];
@@ -1361,12 +1361,12 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         if (b == y || data.adjacent(y,b) || data.adjacent(x,b))
                             continue;
                         EORBIT(2)++;
-                        f_29 += common_y[b] - 1;
-                        f_28 += common_x[b];
-                        f_24 += tri[xy];
-                        f_21 += tri[ab];
-                        f_14 += deg[a] - 2;
-                        f_12 += deg[b] - 1;
+                        f_29 += common_y[b] - 1; // 2e_{29}+2e_{38}+e_{45}+e_{52}
+                        f_28 += common_x[b]; // 2e_{28}+2e_{43}+e_{45}+e_{52}
+                        f_24 += tri[xy]; // e_{24}+e_{39}+e_{45}+e_{52}
+                        f_21 += tri[ab]; // 2e_{21}+2e_{38}+2e_{43}+e_{52}
+                        f_14 += deg[a] - 2; // 2e_{14}+e_{18}+2e_{21}+e_{30}+2e_{38}+e_{39}+2e_{43}+e_{52}
+                        f_12 += deg[b] - 1; // e_{12}+2e_{21}+2e_{28}+2e_{29}+2e_{38}+2e_{43}+e_{45}+e_{52}
                     }
                 }
                 for (int nx = 0;nx<deg[x];nx++) {
@@ -1386,7 +1386,7 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
                         f_12 += deg[b] - 1;
                     }
                 }
-                
+
                 // solve system of equations
                 EORBIT(67) = C5[e];
                 EORBIT(66) = (f_66 - 6 * EORBIT(67)) / 2;
@@ -1450,5 +1450,5 @@ extern "C" void count5(PAIR * const p_edges, int const * const dim_edges, double
     catch (char const *s) {
         error(s);
     }
-    
+
 }
