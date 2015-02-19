@@ -1,0 +1,28 @@
+
+R version 3.1.0 alpha (2014-03-13 r65184) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: i386-w64-mingw32/i386 (32-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(orca)
+> data(petersen)
+> all(duplicated(count4(petersen))[-1])
+[1] TRUE
+> all(duplicated(count5(petersen))[-1])
+[1] TRUE
+> all(duplicated(ecount4(petersen))[-1])
+[1] TRUE
+> all(duplicated(ecount5(petersen))[-1])
+[1] TRUE
+> 
