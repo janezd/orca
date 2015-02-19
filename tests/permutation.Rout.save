@@ -1,0 +1,33 @@
+
+R version 3.1.0 alpha (2014-03-13 r65184) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: i386-w64-mingw32/i386 (32-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(orca)
+> data(usastates)
+> n <- max(usastates)
+> p <- sample(1:n)
+> usastates.p <- apply(usastates, c(1,2), function(x) p[x])
+> 
+> o <- count5(usastates)
+> op <- count5(usastates.p)
+> all(o == op[p,])
+[1] TRUE
+> 
+> e <- ecount5(usastates)
+> ep <- ecount5(usastates.p)
+> all(e == ep)
+[1] TRUE
+> 
