@@ -40,7 +40,7 @@ struct TIII {
 };
 
 struct PAIR {
-	int a, b;
+    int a, b;
 
     inline PAIR(int const aa, int const bb)
     : a(min(aa, bb)), b(max(aa, bb))
@@ -64,17 +64,17 @@ struct hash_PAIR {
 
 
 struct TRIPLE {
-	int a, b, c;
+    int a, b, c;
 
-	TRIPLE(int const a0, int const b0, int const c0)
+    TRIPLE(int const a0, int const b0, int const c0)
     : a(a0), b(b0), c(c0) {
-		if (a > b)
+        if (a > b)
             swap(a, b);
-		if (b > c)
+        if (b > c)
             swap(b, c);
-		if (a > b)
+        if (a > b)
             swap(a, b);
-	}
+    }
 
     inline bool operator <(TRIPLE const &other) const {
         return (a < other.a) ||
@@ -88,9 +88,9 @@ struct TRIPLE {
 };
 
 struct hash_TRIPLE {
-	inline size_t operator ()(TRIPLE const &x) const {
-		return (x.a << 16) ^ (x.b << 8) ^ (x.c << 0);
-	}
+    inline size_t operator ()(TRIPLE const &x) const {
+        return (x.a << 16) ^ (x.b << 8) ^ (x.c << 0);
+    }
 };
 
 
