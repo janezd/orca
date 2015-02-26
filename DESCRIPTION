@@ -7,7 +7,7 @@ Description: Implements orbit counting using a fast combinatorial approach
 Maintainer: Janez Demsar <janez.demsar@fri.uni-lj.si>
 License: LGPL-3
 Depends: R (>= 3.1)
-Suggests: graph
+Enhances: graph
 NeedsCompilation: yes
 SystemRequirements: C++11
 Collate: orca.R

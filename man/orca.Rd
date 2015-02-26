@@ -51,7 +51,9 @@ nodes <- scan("schools-wiki-nodes.txt", what="", sep="\n")
 edges <- read.table("schools-wiki-edges.txt")
 
 orbits <- count4(edges)
-neighbours <- knn.index(orbits, k=10)
+nn <- get.knn(orbits, k=10)
+neighbours <- nn$nn.index
+distances <- nn$nn.dist
 
 check <- c("Canada", "Germany", "Isaac Newton", "Albert Einstein",
            "Mahatma Gandhi", "Mahabharata")
@@ -59,7 +61,9 @@ node_indices <- match(check, nodes)
 for (i in 1:length(check)) {
     cat("\n\n", check[i], ": ", sep="")
     cat(nodes[neighbours[node_indices[i], ]], sep=", ")
-}	
+    cat("\n")
+    cat(round(distances[node_indices[i], ]), sep=", ")
+}
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
