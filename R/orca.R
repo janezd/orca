@@ -3,7 +3,7 @@ convert.graph <- function(graph) {
         t(graph)
     else if (is.data.frame(graph))
         t(data.matrix(graph))
-    else if (require("graph", quietly=TRUE) && inherits(graph, "graph")) {
+    else if (inherits(graph, "graph") && require("graph", quietly=TRUE)) {
         graph::edgeMatrix(graph)
     }
     else stop("unrecognized graph type")
