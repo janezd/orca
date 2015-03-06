@@ -3,9 +3,9 @@
 \alias{usastates}
 \title{Contiguous USA Graph}
 \description{
-  The nodes of Contiguous USA Graph represents the 48 contiguous states
-  of the USA. Edges connect the pair connected by at least on driveable
-  road.
+  The nodes of Contiguous USA Graph represent the 49 contiguous states
+  of the USA. Two nodes are connected if there exists at least one driveable
+  road between the corresponding states.
 }
 \usage{usastates}
 \format{A data frame with 107 observations and 2 columns.}

@@ -1,11 +1,11 @@
 \name{yeast}
 \docType{data}
 \alias{yeast}
-\title{Karate Club network}
+\title{Yeast protein-protein interaction network}
 \description{
   The network representing interactions between 2361 proteins.
 }
-\usage{karate}
+\usage{yeast}
 \format{A data frame with 6646 observations and 2 columns.}
 \source{http://vlado.fmf.uni-lj.si/pub/networks/data/bio/Yeast/Yeast.htm}
 \references{
