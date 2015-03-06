@@ -4,8 +4,7 @@ convert.graph <- function(graph) {
     else if (is.data.frame(graph))
         t(data.matrix(graph))
     else if (require("graph", quietly=TRUE)) {
-        edges <- graph::edgeMatrix(graph)
-        t(matrix(as.integer(edges), ncol(edges), nrow(edges)))
+        graph::edgeMatrix(graph)
     }
     else stop("unrecognized graph type")
 }
