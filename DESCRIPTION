@@ -1,9 +1,11 @@
 Package: orca
 Version: 1.1
 Date: 2014-01-13
-Title: Orca: Counting graphlet orbits in sparse graphs
+Title: Computation of Graphlet Orbit Counts in Sparse Graphs
 Author: Tomaz Hocevar, Janez Demsar
-Description: Implements orbit counting using a fast combinatorial approach
+Description: Implements orbit counting using a fast combinatorial approach.
+	Counts orbits of nodes and edges from edge matrix or data frame, or a
+	graph object from the graph package.
 Maintainer: Janez Demsar <janez.demsar@fri.uni-lj.si>
 License: LGPL-3
 Depends: R (>= 3.1)
